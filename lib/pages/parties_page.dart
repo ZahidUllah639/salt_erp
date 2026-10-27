@@ -295,107 +295,54 @@ class _PartiesPageState extends State<PartiesPage> {
                   padding: const EdgeInsets.all(12),
                   child: Row(
                     children: [
-                      // Search input
+                      // Search input with world-class focus ring & hover
                       Expanded(
                         flex: 3,
-                        child: Container(
-                          height: 36,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            border: Border.all(color: AppColors.border),
-                            borderRadius: BorderRadius.circular(AppColors.radiusSm),
-                          ),
-                          child: TextField(
-                            onChanged: (q) {
-                              _searchQuery = q;
-                              _loadData();
-                            },
-                            style: const TextStyle(fontSize: 12, color: AppColors.textPrimary),
-                            decoration: InputDecoration(
-                              hintText: 'Search ${widget.type.toLowerCase()} by name, phone, code or address...',
-                              hintStyle: const TextStyle(fontSize: 11.5, color: AppColors.textSubtle),
-                              prefixIcon: Padding(
-                                padding: const EdgeInsets.all(9),
-                                child: AppIcons.icon('search', size: 14, color: AppColors.textMuted),
-                              ),
-                              suffixIcon: _searchQuery.isNotEmpty
-                                  ? IconButton(
-                                      icon: const Icon(Icons.clear, size: 14, color: AppColors.textMuted),
-                                      onPressed: () {
-                                        setState(() => _searchQuery = '');
-                                        _loadData();
-                                      },
-                                    )
-                                  : null,
-                              border: InputBorder.none,
-                              contentPadding: const EdgeInsets.symmetric(vertical: 8),
-                            ),
-                          ),
+                        child: ErpSearchInput(
+                          placeholder: 'Search ${widget.type.toLowerCase()} by name, phone, code or address...',
+                          onChanged: (q) {
+                            _searchQuery = q;
+                            _loadData();
+                          },
+                          onClear: () {
+                            _searchQuery = '';
+                            _loadData();
+                          },
                         ),
                       ),
                       const SizedBox(width: 12),
 
-                      // Filter Pills
+                      // Filter Pills with Hover
                       Wrap(
                         spacing: 6,
                         children: ['All', 'Active', 'Outstanding', 'Archived'].map((f) {
                           final selected = _statusFilter == f;
-                          return InkWell(
+                          return _HoverFilterPill(
+                            label: f,
+                            isSelected: selected,
                             onTap: () {
                               setState(() => _statusFilter = f);
                               _loadData();
                             },
-                            borderRadius: BorderRadius.circular(6),
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 150),
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-                              decoration: BoxDecoration(
-                                color: selected ? AppColors.brandLight : const Color(0xFFF8FAFC),
-                                border: Border.all(
-                                  color: selected ? AppColors.brandPrimary : AppColors.border,
-                                ),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                f,
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                                  color: selected ? AppColors.brandPrimary : AppColors.textSecondary,
-                                ),
-                              ),
-                            ),
                           );
                         }).toList(),
                       ),
                       const SizedBox(width: 12),
 
-                      // Sort dropdown
-                      Container(
-                        height: 36,
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          border: Border.all(color: AppColors.border),
-                          borderRadius: BorderRadius.circular(AppColors.radiusSm),
-                        ),
-                        child: DropdownButtonHideUnderline(
-                          child: DropdownButton<String>(
-                            value: _sortOption,
-                            style: const TextStyle(fontSize: 11, color: AppColors.textSecondary, fontWeight: FontWeight.w600),
-                            items: const [
-                              DropdownMenuItem(value: 'Name (A-Z)', child: Text('Sort: Name (A-Z)')),
-                              DropdownMenuItem(value: 'Balance (Highest)', child: Text('Sort: Highest Balance')),
-                              DropdownMenuItem(value: 'Recent Activity', child: Text('Sort: Recent Activity')),
-                            ],
-                            onChanged: (val) {
-                              if (val != null) {
-                                setState(() => _sortOption = val);
-                                _loadData();
-                              }
-                            },
-                          ),
-                        ),
+                      // Sort dropdown with hover effect
+                      _HoverDropdown(
+                        value: _sortOption,
+                        items: const [
+                          DropdownMenuItem(value: 'Name (A-Z)', child: Text('Sort: Name (A-Z)')),
+                          DropdownMenuItem(value: 'Balance (Highest)', child: Text('Sort: Highest Balance')),
+                          DropdownMenuItem(value: 'Recent Activity', child: Text('Sort: Recent Activity')),
+                        ],
+                        onChanged: (val) {
+                          if (val != null) {
+                            setState(() => _sortOption = val);
+                            _loadData();
+                          }
+                        },
                       ),
                     ],
                   ),
@@ -434,274 +381,520 @@ class _PartiesPageState extends State<PartiesPage> {
                 else
                   LayoutBuilder(
                     builder: (context, constraints) {
+                      final tableWidth = constraints.maxWidth > 980 ? constraints.maxWidth : 980.0;
                       return SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
-                        child: ConstrainedBox(
-                          constraints: BoxConstraints(
-                            minWidth: constraints.maxWidth > 980 ? constraints.maxWidth : 980,
-                          ),
-                          child: Table(
-                        columnWidths: const {
-                          0: FlexColumnWidth(2.6), // Profile Name & Code
-                          1: FlexColumnWidth(1.8), // Phone / WhatsApp
-                          2: FlexColumnWidth(1.6), // Current Balance
-                          3: FlexColumnWidth(1.4), // Direction
-                          4: FlexColumnWidth(1.5), // Last Activity
-                          5: FlexColumnWidth(1.2), // Status
-                          6: FixedColumnWidth(85), // Action
-                        },
-                        defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-                        children: [
-                          TableRow(
-                            decoration: const BoxDecoration(
-                              color: AppColors.tableHeaderBg,
-                              border: Border.symmetric(horizontal: BorderSide(color: AppColors.border)),
-                            ),
+                        child: SizedBox(
+                          width: tableWidth,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              _HeaderCell(_singularType.toUpperCase()),
-                              const _HeaderCell('CONTACT / PHONE'),
-                              const _HeaderCell('CURRENT BALANCE', align: TextAlign.right),
-                              const _HeaderCell('DIRECTION'),
-                              const _HeaderCell('LAST ACTIVITY'),
-                              const _HeaderCell('STATUS'),
-                              const _HeaderCell(''),
+                              // Table Header
+                              Container(
+                                decoration: const BoxDecoration(
+                                  color: AppColors.tableHeaderBg,
+                                  border: Border.symmetric(horizontal: BorderSide(color: AppColors.border)),
+                                ),
+                                padding: const EdgeInsets.symmetric(vertical: 10),
+                                child: Row(
+                                  children: [
+                                    Expanded(flex: 26, child: _HeaderCell(_singularType.toUpperCase())),
+                                    const Expanded(flex: 18, child: _HeaderCell('CONTACT / PHONE')),
+                                    const Expanded(flex: 16, child: _HeaderCell('CURRENT BALANCE', align: TextAlign.right)),
+                                    const Expanded(flex: 14, child: _HeaderCell('DIRECTION')),
+                                    const Expanded(flex: 15, child: _HeaderCell('LAST ACTIVITY')),
+                                    const Expanded(flex: 12, child: _HeaderCell('STATUS')),
+                                    const SizedBox(width: 90, child: _HeaderCell('')),
+                                  ],
+                                ),
+                              ),
+
+                              // Interactive Hoverable Party Profile Rows
+                              ..._parties.map((p) {
+                                final balAbs = p.currentBalance.abs();
+                                final isSettled = balAbs <= 0.01;
+                                final dir = p.balanceDirection;
+
+                                final badgeTone = p.isArchived
+                                    ? BadgeTone.neutral
+                                    : isSettled
+                                        ? BadgeTone.green
+                                        : (dir == 'Receivable' ? BadgeTone.amber : BadgeTone.blue);
+
+                                final initials = p.name.split(' ').map((w) => w.isNotEmpty ? w[0] : '').take(2).join('');
+
+                                return _HoverPartyRow(
+                                  party: p,
+                                  initials: initials,
+                                  isSupplier: isSupplier,
+                                  isSettled: isSettled,
+                                  dir: dir,
+                                  balAbs: balAbs,
+                                  badgeTone: badgeTone,
+                                  currencyFormat: _currencyFormat,
+                                  onTap: () => setState(() => _selectedPartyId = p.id),
+                                  onEdit: () => _openEditDialog(p),
+                                  onArchive: () => _toggleArchive(p),
+                                  onDelete: () => _deleteParty(p),
+                                );
+                              }),
                             ],
                           ),
-                          ..._parties.map((p) {
-                            final balAbs = p.currentBalance.abs();
-                            final isSettled = balAbs <= 0.01;
-                            final dir = p.balanceDirection;
-
-                            // Badge
-                            final badgeTone = p.isArchived
-                                ? BadgeTone.neutral
-                                : isSettled
-                                    ? BadgeTone.green
-                                    : (dir == 'Receivable' ? BadgeTone.amber : BadgeTone.blue);
-
-                            final initials = p.name.split(' ').map((w) => w.isNotEmpty ? w[0] : '').take(2).join('');
-
-                            return TableRow(
-                              decoration: const BoxDecoration(
-                                border: Border(bottom: BorderSide(color: AppColors.borderLight)),
-                              ),
-                              children: [
-                                // Name & Code
-                                InkWell(
-                                  onTap: () => setState(() => _selectedPartyId = p.id),
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                                    child: Row(
-                                      children: [
-                                        Container(
-                                          width: 32,
-                                          height: 32,
-                                          decoration: BoxDecoration(
-                                            color: isSupplier ? AppColors.amberLight : AppColors.brandLight,
-                                            borderRadius: BorderRadius.circular(8),
-                                          ),
-                                          alignment: Alignment.center,
-                                          child: Text(
-                                            initials,
-                                            style: TextStyle(
-                                              fontSize: 10.5,
-                                              fontWeight: FontWeight.w700,
-                                              color: isSupplier ? AppColors.amber : AppColors.brandPrimary,
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 10),
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                p.name,
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
-                                                style: const TextStyle(
-                                                  fontSize: 11.5,
-                                                  fontWeight: FontWeight.w700,
-                                                  color: AppColors.textPrimary,
-                                                ),
-                                              ),
-                                              const SizedBox(height: 2),
-                                              Text(
-                                                p.code,
-                                                style: const TextStyle(
-                                                  fontSize: 9.5,
-                                                  color: AppColors.textSubtle,
-                                                  fontWeight: FontWeight.w600,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-
-                                // Phone / Contact
-                                InkWell(
-                                  onTap: () => setState(() => _selectedPartyId = p.id),
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(p.phone, style: AppTypography.body),
-                                        if (p.contactPerson != null && p.contactPerson!.isNotEmpty) ...[
-                                          const SizedBox(height: 1),
-                                          Text(
-                                            p.contactPerson!,
-                                            style: const TextStyle(fontSize: 9.5, color: AppColors.textMuted),
-                                          ),
-                                        ],
-                                      ],
-                                    ),
-                                  ),
-                                ),
-
-                                // Current Balance
-                                InkWell(
-                                  onTap: () => setState(() => _selectedPartyId = p.id),
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                                    child: Text(
-                                      'Rs ${_currencyFormat.format(balAbs)}',
-                                      textAlign: TextAlign.right,
-                                      style: TextStyle(
-                                        fontSize: 11.5,
-                                        fontWeight: FontWeight.w700,
-                                        fontFeatures: const [FontFeature.tabularFigures()],
-                                        color: isSettled
-                                            ? AppColors.green
-                                            : (p.type == 'Customer'
-                                                ? (p.currentBalance > 0 ? AppColors.amber : AppColors.brandPrimary)
-                                                : (p.currentBalance > 0 ? AppColors.brandPrimary : AppColors.amber)),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-
-                                // Direction
-                                InkWell(
-                                  onTap: () => setState(() => _selectedPartyId = p.id),
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                                    child: Text(
-                                      isSettled ? 'Settled (Rs 0)' : dir,
-                                      style: TextStyle(
-                                        fontSize: 10.5,
-                                        fontWeight: FontWeight.w600,
-                                        color: isSettled ? AppColors.green : AppColors.textSecondary,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-
-                                // Last Activity Date
-                                InkWell(
-                                  onTap: () => setState(() => _selectedPartyId = p.id),
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                                    child: Text(
-                                      p.lastTransactionDate != null
-                                          ? (p.lastTransactionDate!.length > 10
-                                              ? p.lastTransactionDate!.substring(0, 10)
-                                              : p.lastTransactionDate!)
-                                          : '—',
-                                      style: AppTypography.body,
-                                    ),
-                                  ),
-                                ),
-
-                                // Status Badge
-                                InkWell(
-                                  onTap: () => setState(() => _selectedPartyId = p.id),
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                                    child: Align(
-                                      alignment: Alignment.centerLeft,
-                                      child: AppBadge(
-                                        label: p.isArchived ? 'Archived' : (isSettled ? 'Settled' : p.status),
-                                        tone: badgeTone,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-
-                                // Open Details & Actions
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 8),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Tooltip(
-                                        message: 'View Profile & Ledger',
-                                        child: InkWell(
-                                          onTap: () => setState(() => _selectedPartyId = p.id),
-                                          borderRadius: BorderRadius.circular(6),
-                                          child: Container(
-                                            width: 26,
-                                            height: 26,
-                                            alignment: Alignment.center,
-                                            child: AppIcons.icon('arrow', size: 13, color: AppColors.brandPrimary),
-                                          ),
-                                        ),
-                                      ),
-                                      PopupMenuButton<String>(
-                                        tooltip: 'Profile options',
-                                        padding: EdgeInsets.zero,
-                                        constraints: const BoxConstraints(minWidth: 160),
-                                        icon: const Icon(Icons.more_vert, size: 16, color: AppColors.textMuted),
-                                        onSelected: (action) {
-                                          if (action == 'view') {
-                                            setState(() => _selectedPartyId = p.id);
-                                          } else if (action == 'edit') {
-                                            _openEditDialog(p);
-                                          } else if (action == 'archive') {
-                                            _toggleArchive(p);
-                                          } else if (action == 'delete') {
-                                            _deleteParty(p);
-                                          }
-                                        },
-                                        itemBuilder: (ctx) => [
-                                          const PopupMenuItem(
-                                            value: 'view',
-                                            child: Text('View Profile & Ledger', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600)),
-                                          ),
-                                          const PopupMenuItem(
-                                            value: 'edit',
-                                            child: Text('Edit Profile Details', style: TextStyle(fontSize: 11.5)),
-                                          ),
-                                          PopupMenuItem(
-                                            value: 'archive',
-                                            child: Text(p.isArchived ? 'Restore to Active' : 'Archive Profile', style: const TextStyle(fontSize: 11.5)),
-                                          ),
-                                          const PopupMenuItem(
-                                            value: 'delete',
-                                            child: Text('Delete Profile', style: TextStyle(fontSize: 11.5, color: AppColors.danger)),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            );
-                          }),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
+                        ),
+                      );
+                    },
+                  ),
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _HoverPartyRow extends StatefulWidget {
+  final Party party;
+  final String initials;
+  final bool isSupplier;
+  final bool isSettled;
+  final String dir;
+  final double balAbs;
+  final BadgeTone badgeTone;
+  final NumberFormat currencyFormat;
+  final VoidCallback onTap;
+  final VoidCallback onEdit;
+  final VoidCallback onArchive;
+  final VoidCallback onDelete;
+
+  const _HoverPartyRow({
+    required this.party,
+    required this.initials,
+    required this.isSupplier,
+    required this.isSettled,
+    required this.dir,
+    required this.balAbs,
+    required this.badgeTone,
+    required this.currencyFormat,
+    required this.onTap,
+    required this.onEdit,
+    required this.onArchive,
+    required this.onDelete,
+  });
+
+  @override
+  State<_HoverPartyRow> createState() => _HoverPartyRowState();
+}
+
+class _HoverPartyRowState extends State<_HoverPartyRow> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = widget.party;
+
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 140),
+          curve: Curves.easeOut,
+          decoration: BoxDecoration(
+            color: _isHovered ? const Color(0xFFF8FAFC) : Colors.white,
+            border: Border(
+              bottom: const BorderSide(color: AppColors.borderLight),
+              left: BorderSide(
+                color: _isHovered ? AppColors.brandPrimary : Colors.transparent,
+                width: 3.5,
+              ),
+            ),
+            boxShadow: _isHovered
+                ? const [
+                    BoxShadow(
+                      color: Color(0x0C0F172A),
+                      blurRadius: 6,
+                      offset: Offset(0, 1.5),
+                    ),
+                  ]
+                : null,
+          ),
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Row(
+            children: [
+              // Name & Code
+              Expanded(
+                flex: 26,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  child: Row(
+                    children: [
+                      AnimatedScale(
+                        scale: _isHovered ? 1.04 : 1.0,
+                        duration: const Duration(milliseconds: 140),
+                        curve: Curves.easeOut,
+                        child: Container(
+                          width: 34,
+                          height: 34,
+                          decoration: BoxDecoration(
+                            color: widget.isSupplier ? AppColors.amberLight : AppColors.brandLight,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: _isHovered
+                                  ? (widget.isSupplier ? AppColors.amber : AppColors.brandPrimary)
+                                  : Colors.transparent,
+                              width: 1.2,
+                            ),
+                            boxShadow: _isHovered
+                                ? [
+                                    BoxShadow(
+                                      color: (widget.isSupplier ? AppColors.amber : AppColors.brandPrimary).withAlpha(40),
+                                      blurRadius: 4,
+                                      offset: const Offset(0, 1.5),
+                                    ),
+                                  ]
+                                : null,
+                          ),
+                          alignment: Alignment.center,
+                          child: Text(
+                            widget.initials,
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: widget.isSupplier ? AppColors.amber : AppColors.brandPrimary,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              p.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: _isHovered ? AppColors.brandPrimary : AppColors.textPrimary,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              p.code,
+                              style: const TextStyle(
+                                fontSize: 9.5,
+                                color: AppColors.textSubtle,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // Phone / Contact
+              Expanded(
+                flex: 18,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(p.phone, style: AppTypography.body),
+                      if (p.contactPerson != null && p.contactPerson!.isNotEmpty) ...[
+                        const SizedBox(height: 1),
+                        Text(
+                          p.contactPerson!,
+                          style: const TextStyle(fontSize: 9.5, color: AppColors.textMuted),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+
+              // Current Balance
+              Expanded(
+                flex: 16,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  child: Text(
+                    'Rs ${widget.currencyFormat.format(widget.balAbs)}',
+                    textAlign: TextAlign.right,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                      color: widget.isSettled
+                          ? AppColors.green
+                          : (p.type == 'Customer'
+                              ? (p.currentBalance > 0 ? AppColors.amber : AppColors.brandPrimary)
+                              : (p.currentBalance > 0 ? AppColors.brandPrimary : AppColors.amber)),
+                    ),
+                  ),
+                ),
+              ),
+
+              // Direction
+              Expanded(
+                flex: 14,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  child: Text(
+                    widget.isSettled ? 'Settled (Rs 0)' : widget.dir,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: widget.isSettled ? AppColors.green : AppColors.textSecondary,
+                    ),
+                  ),
+                ),
+              ),
+
+              // Last Activity Date
+              Expanded(
+                flex: 15,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  child: Text(
+                    p.lastTransactionDate != null
+                        ? (p.lastTransactionDate!.length > 10
+                            ? p.lastTransactionDate!.substring(0, 10)
+                            : p.lastTransactionDate!)
+                        : '—',
+                    style: AppTypography.body,
+                  ),
+                ),
+              ),
+
+              // Status Badge
+              Expanded(
+                flex: 12,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: AppBadge(
+                      label: p.isArchived ? 'Archived' : (widget.isSettled ? 'Settled' : p.status),
+                      tone: widget.badgeTone,
+                    ),
+                  ),
+                ),
+              ),
+
+              // Open Details & Actions
+              SizedBox(
+                width: 90,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 2),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Tooltip(
+                        message: 'View Profile & Ledger',
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 140),
+                          width: 28,
+                          height: 28,
+                          decoration: BoxDecoration(
+                            color: _isHovered ? AppColors.brandLight : Colors.transparent,
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(
+                              color: _isHovered ? AppColors.brandPrimary.withAlpha(80) : Colors.transparent,
+                            ),
+                          ),
+                          alignment: Alignment.center,
+                          child: AppIcons.icon('arrow', size: 13, color: AppColors.brandPrimary),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      SizedBox(
+                        width: 26,
+                        height: 26,
+                        child: PopupMenuButton<String>(
+                          tooltip: 'Profile options',
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(minWidth: 160),
+                          icon: const Icon(Icons.more_vert, size: 16, color: AppColors.textMuted),
+                          onSelected: (action) {
+                          if (action == 'view') {
+                            widget.onTap();
+                          } else if (action == 'edit') {
+                            widget.onEdit();
+                          } else if (action == 'archive') {
+                            widget.onArchive();
+                          } else if (action == 'delete') {
+                            widget.onDelete();
+                          }
+                        },
+                        itemBuilder: (ctx) => [
+                          const PopupMenuItem(
+                            value: 'view',
+                            child: Text('View Profile & Ledger', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600)),
+                          ),
+                          const PopupMenuItem(
+                            value: 'edit',
+                            child: Text('Edit Profile Details', style: TextStyle(fontSize: 11.5)),
+                          ),
+                          PopupMenuItem(
+                            value: 'archive',
+                            child: Text(p.isArchived ? 'Restore to Active' : 'Archive Profile', style: const TextStyle(fontSize: 11.5)),
+                          ),
+                          const PopupMenuItem(
+                            value: 'delete',
+                            child: Text('Delete Profile', style: TextStyle(fontSize: 11.5, color: AppColors.danger)),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _HoverFilterPill extends StatefulWidget {
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _HoverFilterPill({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  State<_HoverFilterPill> createState() => _HoverFilterPillState();
+}
+
+class _HoverFilterPillState extends State<_HoverFilterPill> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    Color bg;
+    Color border;
+    if (widget.isSelected) {
+      bg = AppColors.brandLight;
+      border = AppColors.brandPrimary;
+    } else if (_isHovered) {
+      bg = const Color(0xFFF1F5F9);
+      border = const Color(0xFF94A3B8);
+    } else {
+      bg = const Color(0xFFF8FAFC);
+      border = AppColors.border;
+    }
+
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 140),
+          curve: Curves.easeOut,
+          padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
+          decoration: BoxDecoration(
+            color: bg,
+            border: Border.all(color: border),
+            borderRadius: BorderRadius.circular(6),
+            boxShadow: _isHovered && !widget.isSelected
+                ? const [
+                    BoxShadow(
+                      color: Color(0x0A0F172A),
+                      blurRadius: 3,
+                      offset: Offset(0, 1),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Text(
+            widget.label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: widget.isSelected ? FontWeight.w700 : FontWeight.w500,
+              color: widget.isSelected ? AppColors.brandPrimary : (_isHovered ? AppColors.textPrimary : AppColors.textSecondary),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _HoverDropdown extends StatefulWidget {
+  final String value;
+  final List<DropdownMenuItem<String>> items;
+  final ValueChanged<String?> onChanged;
+
+  const _HoverDropdown({
+    required this.value,
+    required this.items,
+    required this.onChanged,
+  });
+
+  @override
+  State<_HoverDropdown> createState() => _HoverDropdownState();
+}
+
+class _HoverDropdownState extends State<_HoverDropdown> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 140),
+        height: 36,
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        decoration: BoxDecoration(
+          color: _isHovered ? const Color(0xFFF8FAFC) : Colors.white,
+          border: Border.all(
+            color: _isHovered ? const Color(0xFF64748B) : AppColors.border,
+          ),
+          borderRadius: BorderRadius.circular(AppColors.radiusSm),
+          boxShadow: _isHovered
+              ? const [
+                  BoxShadow(
+                    color: Color(0x0A0F172A),
+                    blurRadius: 4,
+                    offset: Offset(0, 1),
+                  ),
+                ]
+              : null,
+        ),
+        child: DropdownButtonHideUnderline(
+          child: DropdownButton<String>(
+            value: widget.value,
+            style: TextStyle(
+              fontSize: 11,
+              color: _isHovered ? AppColors.textPrimary : AppColors.textSecondary,
+              fontWeight: FontWeight.w600,
+            ),
+            items: widget.items,
+            onChanged: widget.onChanged,
+          ),
+        ),
       ),
     );
   }

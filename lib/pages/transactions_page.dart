@@ -628,216 +628,341 @@ class _TransactionsPageState extends State<TransactionsPage> {
                 else
                   LayoutBuilder(
                     builder: (context, constraints) {
+                      final tableWidth = constraints.maxWidth > 880 ? constraints.maxWidth : 880.0;
                       return SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
-                        child: ConstrainedBox(
-                          constraints: BoxConstraints(
-                            minWidth: constraints.maxWidth > 880 ? constraints.maxWidth : 880,
-                          ),
-                          child: Table(
-                        columnWidths: const {
-                          0: FlexColumnWidth(1.4),
-                          1: FlexColumnWidth(1.6),
-                          2: FlexColumnWidth(2.0),
-                          3: FlexColumnWidth(1.2),
-                          4: FlexColumnWidth(1.2),
-                          5: FlexColumnWidth(1.2),
-                          6: FlexColumnWidth(1.0),
-                          7: FixedColumnWidth(88),
-                        },
-                        defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-                        children: [
-                          TableRow(
-                            decoration: const BoxDecoration(
-                              color: AppColors.tableHeaderBg,
-                              border: Border.symmetric(
-                                horizontal: BorderSide(color: AppColors.border),
-                              ),
-                            ),
+                        child: SizedBox(
+                          width: tableWidth,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              const _HeaderCell('TRANSACTION'),
-                              const _HeaderCell('DATE & TIME'),
-                              _HeaderCell(partyLabel.toUpperCase()),
-                              const _HeaderCell('TOTAL'),
-                              _HeaderCell(isSales ? 'RECEIVED' : 'PAID'),
-                              const _HeaderCell('OUTSTANDING'),
-                              const _HeaderCell('STATUS'),
-                              const _HeaderCell('ACTIONS'),
+                              // Table Header
+                              Container(
+                                decoration: const BoxDecoration(
+                                  color: AppColors.tableHeaderBg,
+                                  border: Border.symmetric(
+                                    horizontal: BorderSide(color: AppColors.border),
+                                  ),
+                                ),
+                                padding: const EdgeInsets.symmetric(vertical: 10),
+                                child: Row(
+                                  children: [
+                                    const Expanded(flex: 14, child: _HeaderCell('TRANSACTION')),
+                                    const Expanded(flex: 16, child: _HeaderCell('DATE & TIME')),
+                                    Expanded(flex: 20, child: _HeaderCell(partyLabel.toUpperCase())),
+                                    const Expanded(flex: 12, child: _HeaderCell('TOTAL')),
+                                    Expanded(flex: 12, child: _HeaderCell(isSales ? 'RECEIVED' : 'PAID')),
+                                    const Expanded(flex: 12, child: _HeaderCell('OUTSTANDING')),
+                                    const Expanded(flex: 10, child: _HeaderCell('STATUS')),
+                                    const SizedBox(width: 88, child: _HeaderCell('ACTIONS')),
+                                  ],
+                                ),
+                              ),
+
+                              // Interactive Hoverable Transaction Rows
+                              ...rows.map((item) {
+                                final isCancelled = item.status == 'Cancelled';
+
+                                final statusLabel = isCancelled
+                                    ? 'Cancelled'
+                                    : (item.due <= 0.01 ? 'Paid' : (item.paid > 0 ? 'Partial' : (isSales ? 'Credit' : 'Unpaid')));
+
+                                final badgeTone = isCancelled
+                                    ? BadgeTone.neutral
+                                    : (statusLabel == 'Paid'
+                                        ? BadgeTone.green
+                                        : statusLabel == 'Partial'
+                                            ? BadgeTone.amber
+                                            : BadgeTone.red);
+
+                                return _HoverTransactionRow(
+                                  item: item,
+                                  isCancelled: isCancelled,
+                                  statusLabel: statusLabel,
+                                  badgeTone: badgeTone,
+                                  currencyFormat: _currencyFormat,
+                                  onViewDetails: () => _viewTransactionDetails(item),
+                                  onPrint: () => _printReceipt(item),
+                                  onCancel: () => _cancelTransaction(item),
+                                );
+                              }),
                             ],
                           ),
-                          ...rows.map((item) {
-                            final isCancelled = item.status == 'Cancelled';
-
-                            final statusLabel = isCancelled
-                                ? 'Cancelled'
-                                : (item.due <= 0.01 ? 'Paid' : (item.paid > 0 ? 'Partial' : (isSales ? 'Credit' : 'Unpaid')));
-
-                            final badgeTone = isCancelled
-                                ? BadgeTone.neutral
-                                : (statusLabel == 'Paid'
-                                    ? BadgeTone.green
-                                    : statusLabel == 'Partial'
-                                        ? BadgeTone.amber
-                                        : BadgeTone.red);
-
-                            return TableRow(
-                              decoration: const BoxDecoration(
-                                border: Border(
-                                  bottom: BorderSide(color: AppColors.borderLight),
-                                ),
-                              ),
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                                  child: MouseRegion(
-                                    cursor: SystemMouseCursors.click,
-                                    child: GestureDetector(
-                                      onTap: () => _viewTransactionDetails(item),
-                                      child: Text(
-                                        item.ref,
-                                        style: TextStyle(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w700,
-                                          decoration: isCancelled ? TextDecoration.lineThrough : TextDecoration.underline,
-                                          color: isCancelled ? AppColors.textMuted : AppColors.brandPrimary,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                                  child: Text(item.date, style: AppTypography.body),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                                  child: Text(item.party, style: AppTypography.body),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                                  child: Text(
-                                    'Rs ${_currencyFormat.format(item.total)}',
-                                    style: TextStyle(
-                                      fontSize: 11.5,
-                                      fontWeight: FontWeight.w700,
-                                      decoration: isCancelled ? TextDecoration.lineThrough : null,
-                                      fontFeatures: const [FontFeature.tabularFigures()],
-                                      color: isCancelled ? AppColors.textMuted : AppColors.textPrimary,
-                                    ),
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                                  child: Text(
-                                    'Rs ${_currencyFormat.format(item.paid)}',
-                                    style: TextStyle(
-                                      fontSize: 11.5,
-                                      fontWeight: FontWeight.w600,
-                                      decoration: isCancelled ? TextDecoration.lineThrough : null,
-                                      fontFeatures: const [FontFeature.tabularFigures()],
-                                      color: isCancelled ? AppColors.textMuted : AppColors.successText,
-                                    ),
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                                  child: Text(
-                                    'Rs ${_currencyFormat.format(item.due)}',
-                                    style: TextStyle(
-                                      fontSize: 11.5,
-                                      fontWeight: FontWeight.w600,
-                                      decoration: isCancelled ? TextDecoration.lineThrough : null,
-                                      fontFeatures: const [FontFeature.tabularFigures()],
-                                      color: isCancelled
-                                          ? AppColors.textMuted
-                                          : (item.due <= 0.01 ? AppColors.textSubtle : AppColors.dangerText),
-                                    ),
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                                  child: Align(
-                                    alignment: Alignment.centerLeft,
-                                    child: AppBadge(label: statusLabel, tone: badgeTone),
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Tooltip(
-                                        message: 'Print thermal receipt',
-                                        child: MouseRegion(
-                                          cursor: SystemMouseCursors.click,
-                                          child: GestureDetector(
-                                            onTap: () => _printReceipt(item),
-                                            child: Container(
-                                              width: 26,
-                                              height: 26,
-                                              decoration: BoxDecoration(
-                                                color: AppColors.surfaceMuted,
-                                                borderRadius: BorderRadius.circular(6),
-                                              ),
-                                              alignment: Alignment.center,
-                                              child: AppIcons.icon('print', size: 14, color: AppColors.textSecondary),
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 4),
-                                      SizedBox(
-                                        width: 26,
-                                        height: 26,
-                                        child: PopupMenuButton<String>(
-                                          tooltip: 'Transaction options',
-                                          padding: EdgeInsets.zero,
-                                          icon: const Icon(Icons.more_vert, size: 16, color: AppColors.textMuted),
-                                        onSelected: (action) {
-                                          if (action == 'details') {
-                                            _viewTransactionDetails(item);
-                                          } else if (action == 'print') {
-                                            _printReceipt(item);
-                                          } else if (action == 'cancel') {
-                                            _cancelTransaction(item);
-                                          }
-                                        },
-                                        itemBuilder: (ctx) => [
-                                          const PopupMenuItem(
-                                            value: 'details',
-                                            child: Text('View Transaction Details',
-                                                style: TextStyle(fontSize: 11.5, color: AppColors.textPrimary, fontWeight: FontWeight.w600)),
-                                          ),
-                                          const PopupMenuItem(
-                                            value: 'print',
-                                            child: Text('Print Receipt / Voucher',
-                                                style: TextStyle(fontSize: 11.5, color: AppColors.textSecondary, fontWeight: FontWeight.w500)),
-                                          ),
-                                          if (!isCancelled)
-                                            const PopupMenuItem(
-                                              value: 'cancel',
-                                              child: Text('Cancel & Reverse Transaction',
-                                                  style: TextStyle(fontSize: 11.5, color: AppColors.danger, fontWeight: FontWeight.w600)),
-                                            ),
-                                        ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            );
-                          }),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
+                        ),
+                      );
+                    },
+                  ),
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _HoverTransactionRow extends StatefulWidget {
+  final _TxnRecord item;
+  final bool isCancelled;
+  final String statusLabel;
+  final BadgeTone badgeTone;
+  final NumberFormat currencyFormat;
+  final VoidCallback onViewDetails;
+  final VoidCallback onPrint;
+  final VoidCallback onCancel;
+
+  const _HoverTransactionRow({
+    required this.item,
+    required this.isCancelled,
+    required this.statusLabel,
+    required this.badgeTone,
+    required this.currencyFormat,
+    required this.onViewDetails,
+    required this.onPrint,
+    required this.onCancel,
+  });
+
+  @override
+  State<_HoverTransactionRow> createState() => _HoverTransactionRowState();
+}
+
+class _HoverTransactionRowState extends State<_HoverTransactionRow> {
+  bool _isHovered = false;
+  bool _isPrintHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final item = widget.item;
+
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: GestureDetector(
+        onTap: widget.onViewDetails,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 140),
+          curve: Curves.easeOut,
+          decoration: BoxDecoration(
+            color: _isHovered ? const Color(0xFFF8FAFC) : Colors.white,
+            border: Border(
+              bottom: const BorderSide(color: AppColors.borderLight),
+              left: BorderSide(
+                color: _isHovered ? AppColors.brandPrimary : Colors.transparent,
+                width: 3.5,
+              ),
+            ),
+            boxShadow: _isHovered
+                ? const [
+                    BoxShadow(
+                      color: Color(0x0C0F172A),
+                      blurRadius: 6,
+                      offset: Offset(0, 1.5),
+                    ),
+                  ]
+                : null,
+          ),
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Row(
+            children: [
+              // Transaction Reference Code
+              Expanded(
+                flex: 14,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  child: Text(
+                    item.ref,
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w700,
+                      decoration: widget.isCancelled ? TextDecoration.lineThrough : TextDecoration.underline,
+                      color: widget.isCancelled
+                          ? AppColors.textMuted
+                          : (_isHovered ? AppColors.brandPrimary : const Color(0xFF1D4ED8)),
+                    ),
+                  ),
+                ),
+              ),
+
+              // Date & Time
+              Expanded(
+                flex: 16,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  child: Text(item.date, style: AppTypography.body),
+                ),
+              ),
+
+              // Party
+              Expanded(
+                flex: 20,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  child: Text(
+                    item.party,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: _isHovered ? AppColors.textPrimary : AppColors.textSecondary,
+                    ),
+                  ),
+                ),
+              ),
+
+              // Total Amount
+              Expanded(
+                flex: 12,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  child: Text(
+                    'Rs ${widget.currencyFormat.format(item.total)}',
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w700,
+                      decoration: widget.isCancelled ? TextDecoration.lineThrough : null,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                      color: widget.isCancelled ? AppColors.textMuted : AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+              ),
+
+              // Paid / Received Amount
+              Expanded(
+                flex: 12,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  child: Text(
+                    'Rs ${widget.currencyFormat.format(item.paid)}',
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w600,
+                      decoration: widget.isCancelled ? TextDecoration.lineThrough : null,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                      color: widget.isCancelled ? AppColors.textMuted : AppColors.successText,
+                    ),
+                  ),
+                ),
+              ),
+
+              // Outstanding Amount
+              Expanded(
+                flex: 12,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  child: Text(
+                    'Rs ${widget.currencyFormat.format(item.due)}',
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w600,
+                      decoration: widget.isCancelled ? TextDecoration.lineThrough : null,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                      color: widget.isCancelled
+                          ? AppColors.textMuted
+                          : (item.due <= 0.01 ? AppColors.textSubtle : AppColors.dangerText),
+                    ),
+                  ),
+                ),
+              ),
+
+              // Status Badge
+              Expanded(
+                flex: 10,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: AppBadge(label: widget.statusLabel, tone: widget.badgeTone),
+                  ),
+                ),
+              ),
+
+              // Action Buttons
+              SizedBox(
+                width: 88,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Tooltip(
+                        message: 'Print thermal receipt',
+                        child: MouseRegion(
+                          cursor: SystemMouseCursors.click,
+                          onEnter: (_) => setState(() => _isPrintHovered = true),
+                          onExit: (_) => setState(() => _isPrintHovered = false),
+                          child: GestureDetector(
+                            onTap: widget.onPrint,
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 140),
+                              width: 28,
+                              height: 28,
+                              decoration: BoxDecoration(
+                                color: _isPrintHovered
+                                    ? AppColors.brandLight
+                                    : (_isHovered ? Colors.white : AppColors.surfaceMuted),
+                                border: Border.all(
+                                  color: _isPrintHovered
+                                      ? AppColors.brandPrimary.withAlpha(90)
+                                      : (_isHovered ? AppColors.border : Colors.transparent),
+                                ),
+                                borderRadius: BorderRadius.circular(6),
+                                boxShadow: _isPrintHovered ? AppColors.shadowSm : null,
+                              ),
+                              alignment: Alignment.center,
+                              child: AppIcons.icon(
+                                'print',
+                                size: 14,
+                                color: _isPrintHovered ? AppColors.brandPrimary : AppColors.textSecondary,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      SizedBox(
+                        width: 28,
+                        height: 28,
+                        child: PopupMenuButton<String>(
+                          tooltip: 'Transaction options',
+                          padding: EdgeInsets.zero,
+                          icon: const Icon(Icons.more_vert, size: 16, color: AppColors.textMuted),
+                          onSelected: (action) {
+                            if (action == 'details') {
+                              widget.onViewDetails();
+                            } else if (action == 'print') {
+                              widget.onPrint();
+                            } else if (action == 'cancel') {
+                              widget.onCancel();
+                            }
+                          },
+                          itemBuilder: (ctx) => [
+                            const PopupMenuItem(
+                              value: 'details',
+                              child: Text('View Transaction Details',
+                                  style: TextStyle(fontSize: 11.5, color: AppColors.textPrimary, fontWeight: FontWeight.w600)),
+                            ),
+                            const PopupMenuItem(
+                              value: 'print',
+                              child: Text('Print Receipt / Voucher',
+                                  style: TextStyle(fontSize: 11.5, color: AppColors.textSecondary, fontWeight: FontWeight.w500)),
+                            ),
+                            if (!widget.isCancelled)
+                              const PopupMenuItem(
+                                value: 'cancel',
+                                child: Text('Cancel & Reverse Transaction',
+                                    style: TextStyle(fontSize: 11.5, color: AppColors.danger, fontWeight: FontWeight.w600)),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

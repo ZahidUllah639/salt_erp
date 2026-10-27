@@ -638,16 +638,34 @@ class AppToolbar extends StatefulWidget {
 
 class _AppToolbarState extends State<AppToolbar> {
   final TextEditingController _controller = TextEditingController();
+  final FocusNode _focusNode = FocusNode();
   bool _hasText = false;
+  bool _isSearchHovered = false;
+  bool _isSearchFocused = false;
+  bool _isFilterHovered = false;
+  bool _isDateHovered = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode.addListener(() {
+      if (mounted) setState(() => _isSearchFocused = _focusNode.hasFocus);
+    });
+  }
 
   @override
   void dispose() {
+    _focusNode.dispose();
     _controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final searchBorderColor = _isSearchFocused
+        ? AppColors.brandPrimary
+        : (_isSearchHovered ? const Color(0xFF64748B) : AppColors.border);
+
     return Container(
       height: 54,
       padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -658,84 +676,121 @@ class _AppToolbarState extends State<AppToolbar> {
       ),
       child: Row(
         children: [
-          // Search Box with clear button and shortcut pill
-          Container(
-            width: 290,
-            height: 34,
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            decoration: BoxDecoration(
-              color: AppColors.surfaceMuted,
-              border: Border.all(color: AppColors.border),
-              borderRadius: BorderRadius.circular(AppColors.radiusSm),
-            ),
-            child: Row(
-              children: [
-                AppIcons.icon('search', size: 15, color: AppColors.textSubtle),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: TextField(
-                    controller: _controller,
-                    onChanged: (val) {
-                      setState(() => _hasText = val.isNotEmpty);
-                      widget.onSearch?.call(val);
-                    },
-                    decoration: InputDecoration(
-                      hintText: widget.placeholder,
-                      hintStyle: const TextStyle(
-                        color: AppColors.textSubtle,
-                        fontSize: 11.5,
+          // Search Box with clear button, hover and focus ring
+          MouseRegion(
+            cursor: SystemMouseCursors.text,
+            onEnter: (_) => setState(() => _isSearchHovered = true),
+            onExit: (_) => setState(() => _isSearchHovered = false),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 160),
+              curve: Curves.easeOut,
+              width: 290,
+              height: 34,
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border.all(
+                  color: searchBorderColor,
+                  width: _isSearchFocused ? 1.5 : 1.0,
+                ),
+                borderRadius: BorderRadius.circular(AppColors.radiusSm),
+                boxShadow: _isSearchFocused
+                    ? const [
+                        BoxShadow(
+                          color: Color(0x282563EB),
+                          blurRadius: 6,
+                          spreadRadius: 1.5,
+                        ),
+                      ]
+                    : (_isSearchHovered
+                        ? const [
+                            BoxShadow(
+                              color: Color(0x0F0F172A),
+                              blurRadius: 5,
+                              offset: Offset(0, 1.5),
+                            ),
+                          ]
+                        : null),
+              ),
+              child: Row(
+                children: [
+                  AppIcons.icon(
+                    'search',
+                    size: 15,
+                    color: _isSearchFocused
+                        ? AppColors.brandPrimary
+                        : (_isSearchHovered ? const Color(0xFF475569) : AppColors.textSubtle),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: TextField(
+                      controller: _controller,
+                      focusNode: _focusNode,
+                      onChanged: (val) {
+                        setState(() => _hasText = val.isNotEmpty);
+                        widget.onSearch?.call(val);
+                      },
+                      decoration: InputDecoration(
+                        hintText: widget.placeholder,
+                        hintStyle: const TextStyle(
+                          color: AppColors.textSubtle,
+                          fontSize: 11.5,
+                        ),
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        disabledBorder: InputBorder.none,
+                        errorBorder: InputBorder.none,
+                        filled: false,
+                        isDense: true,
+                        contentPadding: EdgeInsets.zero,
                       ),
-                      border: InputBorder.none,
-                      enabledBorder: InputBorder.none,
-                      focusedBorder: InputBorder.none,
-                      isDense: true,
-                      contentPadding: EdgeInsets.zero,
-                    ),
-                    style: const TextStyle(
-                      color: AppColors.textPrimary,
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.w500,
+                      style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ),
-                ),
-                if (_hasText)
-                  MouseRegion(
-                    cursor: SystemMouseCursors.click,
-                    child: GestureDetector(
-                      onTap: () {
-                        _controller.clear();
-                        setState(() => _hasText = false);
-                        widget.onSearch?.call('');
-                      },
-                      child: const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 4),
-                        child: Icon(
-                          Icons.close,
-                          size: 14,
+                  if (_hasText)
+                    MouseRegion(
+                      cursor: SystemMouseCursors.click,
+                      child: GestureDetector(
+                        onTap: () {
+                          _controller.clear();
+                          setState(() => _hasText = false);
+                          widget.onSearch?.call('');
+                        },
+                        child: const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 4),
+                          child: Icon(
+                            Icons.close,
+                            size: 14,
+                            color: AppColors.textMuted,
+                          ),
+                        ),
+                      ),
+                    )
+                  else
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        border: Border.all(color: AppColors.borderStrong),
+                        borderRadius: BorderRadius.circular(4),
+                        boxShadow: AppColors.shadowSm,
+                      ),
+                      child: const Text(
+                        'Ctrl K',
+                        style: TextStyle(
+                          fontSize: 9,
                           color: AppColors.textMuted,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
-                  )
-                else
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      border: Border.all(color: AppColors.borderStrong),
-                      borderRadius: BorderRadius.circular(4),
-                      boxShadow: AppColors.shadowSm,
-                    ),
-                    child: const Text(
-                      'Ctrl K',
-                      style: TextStyle(
-                        fontSize: 9,
-                        color: AppColors.textMuted,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-              ],
+                ],
+              ),
             ),
           ),
           const SizedBox(width: 8),
@@ -743,29 +798,35 @@ class _AppToolbarState extends State<AppToolbar> {
           // Filters Button
           MouseRegion(
             cursor: SystemMouseCursors.click,
+            onEnter: (_) => setState(() => _isFilterHovered = true),
+            onExit: (_) => setState(() => _isFilterHovered = false),
             child: GestureDetector(
               onTap: widget.onFilter ??
                   () {
                     AppToast.showInfo(context, 'All records currently displayed match active table criteria.');
                   },
-              child: Container(
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 140),
                 height: 34,
                 padding: const EdgeInsets.symmetric(horizontal: 10),
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  border: Border.all(color: AppColors.border),
+                  color: _isFilterHovered ? const Color(0xFFF8FAFC) : Colors.white,
+                  border: Border.all(
+                    color: _isFilterHovered ? const Color(0xFF64748B) : AppColors.border,
+                  ),
                   borderRadius: BorderRadius.circular(AppColors.radiusSm),
+                  boxShadow: _isFilterHovered ? AppColors.shadowSm : null,
                 ),
                 child: Row(
                   children: [
-                    AppIcons.icon('filter', size: 14, color: AppColors.textSecondary),
+                    AppIcons.icon('filter', size: 14, color: _isFilterHovered ? AppColors.brandPrimary : AppColors.textSecondary),
                     const SizedBox(width: 6),
-                    const Text(
+                    Text(
                       'Filters',
                       style: TextStyle(
                         fontSize: 11,
-                        color: AppColors.textSecondary,
-                        fontWeight: FontWeight.w500,
+                        color: _isFilterHovered ? AppColors.textPrimary : AppColors.textSecondary,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                     if (widget.filterCount > 0) ...[
@@ -798,36 +859,42 @@ class _AppToolbarState extends State<AppToolbar> {
           // Date Filter Button
           MouseRegion(
             cursor: SystemMouseCursors.click,
+            onEnter: (_) => setState(() => _isDateHovered = true),
+            onExit: (_) => setState(() => _isDateHovered = false),
             child: GestureDetector(
               onTap: widget.onDateFilter ??
                   () {
                     AppToast.showInfo(context, 'Displaying transactions for accounting period: ${widget.activeDateLabel}');
                   },
-              child: Container(
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 140),
                 height: 34,
                 padding: const EdgeInsets.symmetric(horizontal: 10),
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  border: Border.all(color: AppColors.border),
+                  color: _isDateHovered ? const Color(0xFFF8FAFC) : Colors.white,
+                  border: Border.all(
+                    color: _isDateHovered ? const Color(0xFF64748B) : AppColors.border,
+                  ),
                   borderRadius: BorderRadius.circular(AppColors.radiusSm),
+                  boxShadow: _isDateHovered ? AppColors.shadowSm : null,
                 ),
                 child: Row(
                   children: [
-                    AppIcons.icon('calendar', size: 14, color: AppColors.textSecondary),
+                    AppIcons.icon('calendar', size: 14, color: _isDateHovered ? AppColors.brandPrimary : AppColors.textSecondary),
                     const SizedBox(width: 6),
                     Text(
                       widget.activeDateLabel,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 11,
-                        color: AppColors.textSecondary,
-                        fontWeight: FontWeight.w500,
+                        color: _isDateHovered ? AppColors.textPrimary : AppColors.textSecondary,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                     const SizedBox(width: 4),
-                    const Icon(
+                    Icon(
                       Icons.keyboard_arrow_down,
                       size: 14,
-                      color: AppColors.textMuted,
+                      color: _isDateHovered ? AppColors.textPrimary : AppColors.textMuted,
                     ),
                   ],
                 ),
@@ -1825,3 +1892,410 @@ class DangerNotice extends StatelessWidget {
     );
   }
 }
+
+/// World-class ERP Search Input with smooth hover border illumination and focus ring halo.
+class ErpSearchInput extends StatefulWidget {
+  final TextEditingController? controller;
+  final ValueChanged<String>? onChanged;
+  final VoidCallback? onClear;
+  final String placeholder;
+  final double height;
+  final double? width;
+  final FocusNode? focusNode;
+
+  const ErpSearchInput({
+    super.key,
+    this.controller,
+    this.onChanged,
+    this.onClear,
+    this.placeholder = 'Search...',
+    this.height = 36,
+    this.width,
+    this.focusNode,
+  });
+
+  @override
+  State<ErpSearchInput> createState() => _ErpSearchInputState();
+}
+
+class _ErpSearchInputState extends State<ErpSearchInput> {
+  late FocusNode _focusNode;
+  late TextEditingController _controller;
+  bool _isHovered = false;
+  bool _isFocused = false;
+  bool _internalController = false;
+  bool _internalFocus = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.controller == null) {
+      _controller = TextEditingController();
+      _internalController = true;
+    } else {
+      _controller = widget.controller!;
+    }
+    if (widget.focusNode == null) {
+      _focusNode = FocusNode();
+      _internalFocus = true;
+    } else {
+      _focusNode = widget.focusNode!;
+    }
+    _focusNode.addListener(_onFocusChange);
+  }
+
+  void _onFocusChange() {
+    if (mounted) setState(() => _isFocused = _focusNode.hasFocus);
+  }
+
+  @override
+  void dispose() {
+    _focusNode.removeListener(_onFocusChange);
+    if (_internalFocus) _focusNode.dispose();
+    if (_internalController) _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final borderColor = _isFocused
+        ? AppColors.brandPrimary
+        : (_isHovered ? const Color(0xFF64748B) : AppColors.border);
+
+    return MouseRegion(
+      cursor: SystemMouseCursors.text,
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 160),
+        curve: Curves.easeOut,
+        height: widget.height,
+        width: widget.width,
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(AppColors.radiusSm),
+          border: Border.all(
+            color: borderColor,
+            width: _isFocused ? 1.5 : 1.0,
+          ),
+          boxShadow: _isFocused
+              ? const [
+                  BoxShadow(
+                    color: Color(0x282563EB),
+                    blurRadius: 6,
+                    spreadRadius: 1.5,
+                  ),
+                ]
+              : (_isHovered
+                  ? const [
+                      BoxShadow(
+                        color: Color(0x0F0F172A),
+                        blurRadius: 5,
+                        offset: Offset(0, 1.5),
+                      ),
+                    ]
+                  : null),
+        ),
+        child: Row(
+          children: [
+            AppIcons.icon(
+              'search',
+              size: 14,
+              color: _isFocused
+                  ? AppColors.brandPrimary
+                  : (_isHovered ? const Color(0xFF475569) : AppColors.textMuted),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: TextField(
+                controller: _controller,
+                focusNode: _focusNode,
+                onChanged: (val) {
+                  setState(() {});
+                  widget.onChanged?.call(val);
+                },
+                style: const TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+                decoration: InputDecoration(
+                  hintText: widget.placeholder,
+                  hintStyle: const TextStyle(
+                    color: AppColors.textSubtle,
+                    fontSize: 11.5,
+                  ),
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  disabledBorder: InputBorder.none,
+                  errorBorder: InputBorder.none,
+                  isDense: true,
+                  contentPadding: EdgeInsets.zero,
+                  filled: false,
+                ),
+              ),
+            ),
+            if (_controller.text.isNotEmpty)
+              MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: GestureDetector(
+                  onTap: () {
+                    _controller.clear();
+                    setState(() {});
+                    widget.onChanged?.call('');
+                    widget.onClear?.call();
+                  },
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 4),
+                    child: Icon(Icons.close, size: 14, color: AppColors.textMuted),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Unified World-class Form Input Field with hover effect, focus ring halo, and no double box.
+class ErpFormField extends StatefulWidget {
+  final String label;
+  final TextEditingController controller;
+  final String? hint;
+  final String? helperText;
+  final String? suffix;
+  final int maxLines;
+  final TextInputType keyboardType;
+  final bool obscureText;
+  final String? Function(String?)? validator;
+  final ValueChanged<String>? onChanged;
+
+  const ErpFormField({
+    super.key,
+    required this.label,
+    required this.controller,
+    this.hint,
+    this.helperText,
+    this.suffix,
+    this.maxLines = 1,
+    this.keyboardType = TextInputType.text,
+    this.obscureText = false,
+    this.validator,
+    this.onChanged,
+  });
+
+  @override
+  State<ErpFormField> createState() => _ErpFormFieldState();
+}
+
+class _ErpFormFieldState extends State<ErpFormField> {
+  final FocusNode _focusNode = FocusNode();
+  bool _isHovered = false;
+  bool _isFocused = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode.addListener(() {
+      if (mounted) setState(() => _isFocused = _focusNode.hasFocus);
+    });
+  }
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final borderColor = _isFocused
+        ? AppColors.brandPrimary
+        : (_isHovered ? const Color(0xFF64748B) : AppColors.border);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            AnimatedDefaultTextStyle(
+              duration: const Duration(milliseconds: 140),
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: _isFocused
+                    ? AppColors.brandPrimary
+                    : (_isHovered ? AppColors.textPrimary : AppColors.textSecondary),
+              ),
+              child: Text(widget.label),
+            ),
+            if (widget.suffix != null)
+              Text(
+                widget.suffix!,
+                style: const TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textSubtle,
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 5),
+        MouseRegion(
+          cursor: SystemMouseCursors.text,
+          onEnter: (_) => setState(() => _isHovered = true),
+          onExit: (_) => setState(() => _isHovered = false),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 160),
+            curve: Curves.easeOut,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(AppColors.radiusSm),
+              border: Border.all(
+                color: borderColor,
+                width: _isFocused ? 1.5 : 1.0,
+              ),
+              boxShadow: _isFocused
+                  ? const [
+                      BoxShadow(
+                        color: Color(0x282563EB),
+                        blurRadius: 6,
+                        spreadRadius: 1.5,
+                      ),
+                    ]
+                  : (_isHovered
+                      ? const [
+                          BoxShadow(
+                            color: Color(0x0F0F172A),
+                            blurRadius: 5,
+                            offset: Offset(0, 1.5),
+                          ),
+                        ]
+                      : null),
+            ),
+            child: TextFormField(
+              controller: widget.controller,
+              focusNode: _focusNode,
+              maxLines: widget.maxLines,
+              keyboardType: widget.keyboardType,
+              obscureText: widget.obscureText,
+              validator: widget.validator,
+              onChanged: widget.onChanged,
+              style: const TextStyle(
+                fontSize: 12,
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w500,
+              ),
+              decoration: InputDecoration(
+                hintText: widget.hint,
+                hintStyle: const TextStyle(
+                  color: AppColors.textSubtle,
+                  fontSize: 11.5,
+                ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                disabledBorder: InputBorder.none,
+                errorBorder: InputBorder.none,
+                filled: false,
+                isDense: true,
+              ),
+            ),
+          ),
+        ),
+        if (widget.helperText != null) ...[
+          const SizedBox(height: 3),
+          Text(
+            widget.helperText!,
+            style: const TextStyle(fontSize: 10, color: AppColors.textSubtle),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// Interactive Table Row with smooth full-row hover illumination, brand-blue accent edge, and tactile click response.
+class AppTableRow extends StatefulWidget {
+  final List<Widget> children;
+  final VoidCallback? onTap;
+  final bool isSelected;
+  final Color? normalColor;
+  final Color? hoverColor;
+  final EdgeInsetsGeometry padding;
+  final bool showLeftAccent;
+
+  const AppTableRow({
+    super.key,
+    required this.children,
+    this.onTap,
+    this.isSelected = false,
+    this.normalColor,
+    this.hoverColor,
+    this.padding = EdgeInsets.zero,
+    this.showLeftAccent = true,
+  });
+
+  @override
+  State<AppTableRow> createState() => _AppTableRowState();
+}
+
+class _AppTableRowState extends State<AppTableRow> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final bg = widget.isSelected
+        ? const Color(0xFFEFF6FF)
+        : (_isHovered
+            ? (widget.hoverColor ?? const Color(0xFFF8FAFC))
+            : (widget.normalColor ?? Colors.white));
+
+    return MouseRegion(
+      cursor: widget.onTap != null ? SystemMouseCursors.click : MouseCursor.defer,
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 140),
+          curve: Curves.easeOut,
+          decoration: BoxDecoration(
+            color: bg,
+            border: Border(
+              bottom: const BorderSide(color: AppColors.borderLight),
+              left: widget.showLeftAccent
+                  ? BorderSide(
+                      color: (_isHovered || widget.isSelected)
+                          ? AppColors.brandPrimary
+                          : Colors.transparent,
+                      width: 3.5,
+                    )
+                  : BorderSide.none,
+            ),
+            boxShadow: _isHovered
+                ? const [
+                    BoxShadow(
+                      color: Color(0x0C0F172A),
+                      blurRadius: 6,
+                      offset: Offset(0, 1.5),
+                    ),
+                  ]
+                : null,
+          ),
+          padding: widget.padding,
+          child: Row(
+            children: widget.children,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
