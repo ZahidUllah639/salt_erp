@@ -352,17 +352,10 @@ class _TransactionsPageState extends State<TransactionsPage> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Status Filter', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
-              const SizedBox(height: 6),
-              DropdownButtonFormField<String>(
-                initialValue: _statusFilter,
-                decoration: InputDecoration(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppColors.radiusSm)),
-                ),
-                items: ['All', 'Paid', 'Partial', 'Unpaid', 'Cancelled']
-                    .map((s) => DropdownMenuItem(value: s, child: Text(s, style: const TextStyle(fontSize: 12))))
-                    .toList(),
+              ErpDropdownField<String>(
+                label: 'Status Filter',
+                value: _statusFilter,
+                items: const ['All', 'Paid', 'Partial', 'Unpaid', 'Cancelled'],
                 onChanged: (val) {
                   if (val != null) {
                     setDialogState(() => _statusFilter = val);

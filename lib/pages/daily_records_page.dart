@@ -287,17 +287,10 @@ class _DailyRecordsPageState extends State<DailyRecordsPage> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Record Type', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
-              const SizedBox(height: 6),
-              DropdownButtonFormField<String>(
-                initialValue: _typeFilter,
-                decoration: InputDecoration(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppColors.radiusSm)),
-                ),
-                items: ['All', 'Expense', 'Income', 'Customer Collection', 'Supplier Payment', 'Wallet Transfer', 'Stock Adjustment']
-                    .map((t) => DropdownMenuItem(value: t, child: Text(t, style: const TextStyle(fontSize: 12))))
-                    .toList(),
+              ErpDropdownField<String>(
+                label: 'Record Type',
+                value: _typeFilter,
+                items: const ['All', 'Expense', 'Income', 'Customer Collection', 'Supplier Payment', 'Wallet Transfer', 'Stock Adjustment'],
                 onChanged: (val) {
                   if (val != null) {
                     setDialogState(() => _typeFilter = val);

@@ -1996,9 +1996,11 @@ class ErpFormField extends StatefulWidget {
   final String? hint;
   final String? helperText;
   final String? suffix;
+  final IconData? prefixIcon;
   final int maxLines;
   final TextInputType keyboardType;
   final bool obscureText;
+  final bool readOnly;
   final String? Function(String?)? validator;
   final ValueChanged<String>? onChanged;
 
@@ -2009,9 +2011,11 @@ class ErpFormField extends StatefulWidget {
     this.hint,
     this.helperText,
     this.suffix,
+    this.prefixIcon,
     this.maxLines = 1,
     this.keyboardType = TextInputType.text,
     this.obscureText = false,
+    this.readOnly = false,
     this.validator,
     this.onChanged,
   });
@@ -2076,14 +2080,14 @@ class _ErpFormFieldState extends State<ErpFormField> {
         ),
         const SizedBox(height: 5),
         MouseRegion(
-          cursor: SystemMouseCursors.text,
+          cursor: widget.readOnly ? SystemMouseCursors.basic : SystemMouseCursors.text,
           onEnter: (_) => setState(() => _isHovered = true),
           onExit: (_) => setState(() => _isHovered = false),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 160),
             curve: Curves.easeOut,
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: widget.readOnly ? const Color(0xFFF8FAFC) : Colors.white,
               borderRadius: BorderRadius.circular(AppColors.radiusSm),
               border: Border.all(
                 color: borderColor,
@@ -2107,34 +2111,50 @@ class _ErpFormFieldState extends State<ErpFormField> {
                         ]
                       : null),
             ),
-            child: TextFormField(
-              controller: widget.controller,
-              focusNode: _focusNode,
-              maxLines: widget.maxLines,
-              keyboardType: widget.keyboardType,
-              obscureText: widget.obscureText,
-              validator: widget.validator,
-              onChanged: widget.onChanged,
-              style: const TextStyle(
-                fontSize: 12,
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w500,
-              ),
-              decoration: InputDecoration(
-                hintText: widget.hint,
-                hintStyle: const TextStyle(
-                  color: AppColors.textSubtle,
-                  fontSize: 11.5,
+            child: Row(
+              children: [
+                if (widget.prefixIcon != null)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 10, right: 2),
+                    child: Icon(
+                      widget.prefixIcon,
+                      size: 16,
+                      color: _isFocused ? AppColors.brandPrimary : AppColors.textMuted,
+                    ),
+                  ),
+                Expanded(
+                  child: TextFormField(
+                    controller: widget.controller,
+                    focusNode: _focusNode,
+                    readOnly: widget.readOnly,
+                    maxLines: widget.maxLines,
+                    keyboardType: widget.keyboardType,
+                    obscureText: widget.obscureText,
+                    validator: widget.validator,
+                    onChanged: widget.onChanged,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: widget.hint,
+                      hintStyle: const TextStyle(
+                        color: AppColors.textSubtle,
+                        fontSize: 11.5,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                      border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      disabledBorder: InputBorder.none,
+                      errorBorder: InputBorder.none,
+                      filled: false,
+                      isDense: true,
+                    ),
+                  ),
                 ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                border: InputBorder.none,
-                enabledBorder: InputBorder.none,
-                focusedBorder: InputBorder.none,
-                disabledBorder: InputBorder.none,
-                errorBorder: InputBorder.none,
-                filled: false,
-                isDense: true,
-              ),
+              ],
             ),
           ),
         ),
@@ -2145,6 +2165,101 @@ class _ErpFormFieldState extends State<ErpFormField> {
             style: const TextStyle(fontSize: 10, color: AppColors.textSubtle),
           ),
         ],
+      ],
+    );
+  }
+}
+
+/// Unified World-class Form Dropdown Field matching ErpFormField with hover effect and focus ring halo.
+class ErpDropdownField<T> extends StatefulWidget {
+  final String label;
+  final T value;
+  final List<T> items;
+  final ValueChanged<T?> onChanged;
+  final String Function(T)? itemLabel;
+
+  const ErpDropdownField({
+    super.key,
+    required this.label,
+    required this.value,
+    required this.items,
+    required this.onChanged,
+    this.itemLabel,
+  });
+
+  @override
+  State<ErpDropdownField<T>> createState() => _ErpDropdownFieldState<T>();
+}
+
+class _ErpDropdownFieldState<T> extends State<ErpDropdownField<T>> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final borderColor = _isHovered ? const Color(0xFF64748B) : AppColors.border;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        AnimatedDefaultTextStyle(
+          duration: const Duration(milliseconds: 140),
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            color: _isHovered ? AppColors.textPrimary : AppColors.textSecondary,
+          ),
+          child: Text(widget.label),
+        ),
+        const SizedBox(height: 5),
+        MouseRegion(
+          cursor: SystemMouseCursors.click,
+          onEnter: (_) => setState(() => _isHovered = true),
+          onExit: (_) => setState(() => _isHovered = false),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 160),
+            curve: Curves.easeOut,
+            height: 38,
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(AppColors.radiusSm),
+              border: Border.all(
+                color: borderColor,
+                width: 1.0,
+              ),
+              boxShadow: _isHovered
+                  ? const [
+                      BoxShadow(
+                        color: Color(0x0F0F172A),
+                        blurRadius: 5,
+                        offset: Offset(0, 1.5),
+                      ),
+                    ]
+                  : null,
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<T>(
+                value: widget.value,
+                isExpanded: true,
+                icon: const Icon(Icons.arrow_drop_down, size: 20, color: AppColors.textMuted),
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w500,
+                ),
+                items: widget.items.map((item) {
+                  final label = widget.itemLabel?.call(item) ?? item.toString();
+                  return DropdownMenuItem<T>(
+                    value: item,
+                    child: Text(label),
+                  );
+                }).toList(),
+                onChanged: widget.onChanged,
+              ),
+            ),
+          ),
+        ),
       ],
     );
   }

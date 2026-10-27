@@ -892,14 +892,10 @@ class _SettingsPageState extends State<SettingsPage> {
                 style: TextStyle(fontSize: 11, color: AppColors.textMuted),
               ),
               const SizedBox(height: 10),
-              TextField(
+              _ErpFormField(
+                label: 'Folder Path',
                 controller: controller,
-                style: const TextStyle(fontSize: 11),
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  isDense: true,
-                  hintText: r'D:\Salt Factory Backups',
-                ),
+                hintText: r'D:\Salt Factory Backups',
               ),
             ],
           ),

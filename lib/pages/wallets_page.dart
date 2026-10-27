@@ -581,30 +581,7 @@ class _WalletsPageState extends State<WalletsPage> {
                                   style: TextStyle(fontSize: 9, color: Color(0xFF768092)),
                                 ),
                                 const SizedBox(height: 5),
-                                SizedBox(
-                                  height: 28,
-                                  width: 140,
-                                  child: TextField(
-                                    controller: _countedController,
-                                    style: const TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w700,
-                                      fontFeatures: [FontFeature.tabularFigures()],
-                                      color: AppColors.text,
-                                    ),
-                                    decoration: InputDecoration(
-                                      prefixText: 'Rs ',
-                                      prefixStyle: const TextStyle(fontSize: 11, color: Color(0xFF768092)),
-                                      contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
-                                      filled: true,
-                                      fillColor: Colors.white,
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(AppColors.radiusSm),
-                                        borderSide: const BorderSide(color: Color(0xFFD3D8E0)),
-                                      ),
-                                    ),
-                                  ),
-                                ),
+                                _DrawerCountField(controller: _countedController),
                               ],
                             ),
                           ),
@@ -723,6 +700,107 @@ class _WalletsPageState extends State<WalletsPage> {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _DrawerCountField extends StatefulWidget {
+  final TextEditingController controller;
+
+  const _DrawerCountField({required this.controller});
+
+  @override
+  State<_DrawerCountField> createState() => _DrawerCountFieldState();
+}
+
+class _DrawerCountFieldState extends State<_DrawerCountField> {
+  bool _isHovered = false;
+  bool _isFocused = false;
+  late final FocusNode _focusNode;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode = FocusNode();
+    _focusNode.addListener(() {
+      if (mounted) setState(() => _isFocused = _focusNode.hasFocus);
+    });
+  }
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final borderColor = _isFocused
+        ? AppColors.brandPrimary
+        : (_isHovered ? const Color(0xFF64748B) : const Color(0xFFD3D8E0));
+
+    return MouseRegion(
+      cursor: SystemMouseCursors.text,
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 160),
+        curve: Curves.easeOut,
+        height: 28,
+        width: 140,
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(AppColors.radiusSm),
+          border: Border.all(color: borderColor, width: _isFocused ? 1.5 : 1.0),
+          boxShadow: _isFocused
+              ? const [
+                  BoxShadow(
+                    color: Color(0x282563EB),
+                    blurRadius: 4,
+                    spreadRadius: 1,
+                  )
+                ]
+              : (_isHovered
+                  ? const [
+                      BoxShadow(
+                        color: Color(0x0F0F172A),
+                        blurRadius: 4,
+                        offset: Offset(0, 1),
+                      )
+                    ]
+                  : null),
+        ),
+        child: Row(
+          children: [
+            const Text(
+              'Rs ',
+              style: TextStyle(fontSize: 11, color: Color(0xFF768092), fontWeight: FontWeight.w500),
+            ),
+            Expanded(
+              child: TextField(
+                controller: widget.controller,
+                focusNode: _focusNode,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  fontFeatures: [FontFeature.tabularFigures()],
+                  color: AppColors.text,
+                ),
+                decoration: const InputDecoration(
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  disabledBorder: InputBorder.none,
+                  isDense: true,
+                  contentPadding: EdgeInsets.zero,
+                  filled: false,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

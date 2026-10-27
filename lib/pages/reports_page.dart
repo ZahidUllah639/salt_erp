@@ -645,35 +645,11 @@ class _ReportViewerDialogState extends State<_ReportViewerDialog> {
                 children: [
                   const Text('From:', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
                   const SizedBox(width: 6),
-                  SizedBox(
-                    width: 110,
-                    height: 32,
-                    child: TextField(
-                      controller: _startDateCtrl,
-                      style: const TextStyle(fontSize: 11),
-                      decoration: const InputDecoration(
-                        contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        border: OutlineInputBorder(),
-                        isDense: true,
-                      ),
-                    ),
-                  ),
+                  _DateFilterField(controller: _startDateCtrl),
                   const SizedBox(width: 12),
                   const Text('To:', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
                   const SizedBox(width: 6),
-                  SizedBox(
-                    width: 110,
-                    height: 32,
-                    child: TextField(
-                      controller: _endDateCtrl,
-                      style: const TextStyle(fontSize: 11),
-                      decoration: const InputDecoration(
-                        contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        border: OutlineInputBorder(),
-                        isDense: true,
-                      ),
-                    ),
-                  ),
+                  _DateFilterField(controller: _endDateCtrl),
                   const SizedBox(width: 12),
                   Wrap(
                     spacing: 6,
@@ -907,6 +883,94 @@ class _ReportViewerDialogState extends State<_ReportViewerDialog> {
         child: Text(
           label,
           style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.textMuted),
+        ),
+      ),
+    );
+  }
+}
+
+class _DateFilterField extends StatefulWidget {
+  final TextEditingController controller;
+
+  const _DateFilterField({required this.controller});
+
+  @override
+  State<_DateFilterField> createState() => _DateFilterFieldState();
+}
+
+class _DateFilterFieldState extends State<_DateFilterField> {
+  bool _isHovered = false;
+  bool _isFocused = false;
+  late final FocusNode _focusNode;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode = FocusNode();
+    _focusNode.addListener(() {
+      if (mounted) setState(() => _isFocused = _focusNode.hasFocus);
+    });
+  }
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final borderColor = _isFocused
+        ? AppColors.brandPrimary
+        : (_isHovered ? const Color(0xFF64748B) : AppColors.border);
+
+    return MouseRegion(
+      cursor: SystemMouseCursors.text,
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 160),
+        curve: Curves.easeOut,
+        width: 110,
+        height: 32,
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(AppColors.radiusSm),
+          border: Border.all(color: borderColor, width: _isFocused ? 1.5 : 1.0),
+          boxShadow: _isFocused
+              ? const [
+                  BoxShadow(
+                    color: Color(0x282563EB),
+                    blurRadius: 4,
+                    spreadRadius: 1,
+                  )
+                ]
+              : (_isHovered
+                  ? const [
+                      BoxShadow(
+                        color: Color(0x0F0F172A),
+                        blurRadius: 4,
+                        offset: Offset(0, 1),
+                      )
+                    ]
+                  : null),
+        ),
+        child: Center(
+          child: TextField(
+            controller: widget.controller,
+            focusNode: _focusNode,
+            style: const TextStyle(fontSize: 11, color: AppColors.textPrimary, fontWeight: FontWeight.w500),
+            decoration: const InputDecoration(
+              border: InputBorder.none,
+              enabledBorder: InputBorder.none,
+              focusedBorder: InputBorder.none,
+              disabledBorder: InputBorder.none,
+              isDense: true,
+              contentPadding: EdgeInsets.zero,
+              filled: false,
+            ),
+          ),
         ),
       ),
     );

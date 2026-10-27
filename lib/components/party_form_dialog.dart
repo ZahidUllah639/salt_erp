@@ -427,52 +427,14 @@ class _PartyFormDialogState extends State<PartyFormDialog> {
                                 const SizedBox(width: 12),
                                 Expanded(
                                   flex: 3,
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      const Text(
-                                        'Direction',
-                                        style: TextStyle(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w600,
-                                          color: AppColors.textSecondary,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 5),
-                                      Container(
-                                        height: 38,
-                                        padding: const EdgeInsets.symmetric(horizontal: 10),
-                                        decoration: BoxDecoration(
-                                          color: Colors.white,
-                                          border: Border.all(color: AppColors.border),
-                                          borderRadius: BorderRadius.circular(AppColors.radiusSm),
-                                        ),
-                                        child: DropdownButtonHideUnderline(
-                                          child: DropdownButton<String>(
-                                            value: _openingBalanceType,
-                                            isExpanded: true,
-                                            style: const TextStyle(
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.w600,
-                                              color: AppColors.textPrimary,
-                                            ),
-                                            items: const [
-                                              DropdownMenuItem(
-                                                value: 'Receivable',
-                                                child: Text('Receivable (Owes Factory)'),
-                                              ),
-                                              DropdownMenuItem(
-                                                value: 'Payable',
-                                                child: Text('Payable (Factory Owes)'),
-                                              ),
-                                            ],
-                                            onChanged: (val) {
-                                              if (val != null) setState(() => _openingBalanceType = val);
-                                            },
-                                          ),
-                                        ),
-                                      ),
-                                    ],
+                                  child: ErpDropdownField<String>(
+                                    label: 'Direction',
+                                    value: _openingBalanceType,
+                                    items: const ['Receivable', 'Payable'],
+                                    itemLabel: (v) => v == 'Receivable' ? 'Receivable (Owes Factory)' : 'Payable (Factory Owes)',
+                                    onChanged: (val) {
+                                      if (val != null) setState(() => _openingBalanceType = val);
+                                    },
                                   ),
                                 ),
                                 const SizedBox(width: 12),
@@ -612,53 +574,13 @@ class _PartyFormDialogState extends State<PartyFormDialog> {
     TextInputType? keyboardType,
     String? Function(String?)? validator,
   }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textSecondary,
-          ),
-        ),
-        const SizedBox(height: 5),
-        TextFormField(
-          controller: controller,
-          maxLines: maxLines,
-          keyboardType: keyboardType,
-          validator: validator,
-          style: const TextStyle(
-            fontSize: 12,
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.w500,
-          ),
-          decoration: InputDecoration(
-            hintText: hint,
-            hintStyle: const TextStyle(color: AppColors.textSubtle, fontSize: 11.5),
-            filled: true,
-            fillColor: Colors.white,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppColors.radiusSm),
-              borderSide: const BorderSide(color: AppColors.border),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppColors.radiusSm),
-              borderSide: const BorderSide(color: AppColors.border),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppColors.radiusSm),
-              borderSide: const BorderSide(color: AppColors.brandPrimary, width: 1.5),
-            ),
-            errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppColors.radiusSm),
-              borderSide: const BorderSide(color: AppColors.danger),
-            ),
-          ),
-        ),
-      ],
+    return ErpFormField(
+      label: label,
+      controller: controller,
+      hint: hint,
+      maxLines: maxLines,
+      keyboardType: keyboardType ?? TextInputType.text,
+      validator: validator,
     );
   }
 }

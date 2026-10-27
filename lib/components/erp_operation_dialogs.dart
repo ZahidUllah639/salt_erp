@@ -355,44 +355,12 @@ class _UserProfileDialogState extends State<UserProfileDialog> with SingleTicker
     bool isPassword = false,
     bool readOnly = false,
   }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
-        ),
-        const SizedBox(height: 5),
-        Container(
-          height: 38,
-          decoration: BoxDecoration(
-            color: readOnly ? const Color(0xFFF1F5F9) : Colors.white,
-            border: Border.all(color: AppColors.border),
-            borderRadius: BorderRadius.circular(AppColors.radiusSm),
-          ),
-          child: Row(
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-                child: Icon(icon, size: 16, color: AppColors.textMuted),
-              ),
-              Expanded(
-                child: TextField(
-                  controller: controller,
-                  readOnly: readOnly,
-                  obscureText: isPassword,
-                  style: const TextStyle(fontSize: 12, color: AppColors.textPrimary, fontWeight: FontWeight.w500),
-                  decoration: const InputDecoration(
-                    border: InputBorder.none,
-                    isDense: true,
-                    contentPadding: EdgeInsets.symmetric(vertical: 9),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
+    return ErpFormField(
+      label: label,
+      controller: controller,
+      prefixIcon: icon,
+      obscureText: isPassword,
+      readOnly: readOnly,
     );
   }
 }
@@ -497,30 +465,25 @@ class _StaffUserDialogState extends State<StaffUserDialog> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _buildField('Full Name', _nameController, 'e.g. Tariq Mehmood'),
+                  ErpFormField(
+                    label: 'Full Name',
+                    controller: _nameController,
+                    hint: 'e.g. Tariq Mehmood',
+                  ),
                   const SizedBox(height: 12),
-                  _buildField('Designation / Job Title', _roleController, 'e.g. Shift Incharge / Packaging'),
+                  ErpFormField(
+                    label: 'Designation / Job Title',
+                    controller: _roleController,
+                    hint: 'e.g. Shift Incharge / Packaging',
+                  ),
                   const SizedBox(height: 12),
-                  const Text('Permission Tier', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
-                  const SizedBox(height: 5),
-                  Container(
-                    height: 38,
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: AppColors.border),
-                      borderRadius: BorderRadius.circular(AppColors.radiusSm),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: _accessLevel,
-                        isExpanded: true,
-                        style: const TextStyle(fontSize: 12, color: AppColors.textPrimary, fontWeight: FontWeight.w500),
-                        items: _accessLevels.map((l) => DropdownMenuItem(value: l, child: Text(l))).toList(),
-                        onChanged: (val) {
-                          if (val != null) setState(() => _accessLevel = val);
-                        },
-                      ),
-                    ),
+                  ErpDropdownField<String>(
+                    label: 'Permission Tier',
+                    value: _accessLevel,
+                    items: _accessLevels,
+                    onChanged: (val) {
+                      if (val != null) setState(() => _accessLevel = val);
+                    },
                   ),
                   const SizedBox(height: 12),
                   const Text('Terminal Status', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
@@ -568,35 +531,6 @@ class _StaffUserDialogState extends State<StaffUserDialog> {
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildField(String label, TextEditingController controller, String hint) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
-        const SizedBox(height: 5),
-        Container(
-          height: 38,
-          padding: const EdgeInsets.symmetric(horizontal: 10),
-          decoration: BoxDecoration(
-            border: Border.all(color: AppColors.border),
-            borderRadius: BorderRadius.circular(AppColors.radiusSm),
-          ),
-          child: TextField(
-            controller: controller,
-            style: const TextStyle(fontSize: 12, color: AppColors.textPrimary),
-            decoration: InputDecoration(
-              border: InputBorder.none,
-              hintText: hint,
-              hintStyle: const TextStyle(fontSize: 11.5, color: AppColors.textSubtle),
-              isDense: true,
-              contentPadding: const EdgeInsets.symmetric(vertical: 9),
-            ),
-          ),
-        ),
-      ],
     );
   }
 }
@@ -728,115 +662,81 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
                         flex: 3,
-                        child: _buildField('Product / Item Name', _nameController, 'e.g. HGM Pink Salt 800g × 24'),
+                        child: ErpFormField(
+                          label: 'Product / Item Name',
+                          controller: _nameController,
+                          hint: 'e.g. HGM Pink Salt 800g × 24',
+                        ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         flex: 2,
-                        child: _buildField('SKU / Code', _codeController, 'FG-080024'),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text('Product Category', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
-                            const SizedBox(height: 5),
-                            Container(
-                              height: 38,
-                              padding: const EdgeInsets.symmetric(horizontal: 10),
-                              decoration: BoxDecoration(
-                                border: Border.all(color: AppColors.border),
-                                borderRadius: BorderRadius.circular(AppColors.radiusSm),
-                              ),
-                              child: DropdownButtonHideUnderline(
-                                child: DropdownButton<String>(
-                                  value: _type,
-                                  isExpanded: true,
-                                  style: const TextStyle(fontSize: 12, color: AppColors.textPrimary, fontWeight: FontWeight.w500),
-                                  items: _types.map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
-                                  onChanged: (val) {
-                                    if (val != null) setState(() => _type = val);
-                                  },
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text('Base Stock Unit', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
-                            const SizedBox(height: 5),
-                            Container(
-                              height: 38,
-                              padding: const EdgeInsets.symmetric(horizontal: 10),
-                              decoration: BoxDecoration(
-                                border: Border.all(color: AppColors.border),
-                                borderRadius: BorderRadius.circular(AppColors.radiusSm),
-                              ),
-                              child: DropdownButtonHideUnderline(
-                                child: DropdownButton<String>(
-                                  value: _baseUnit,
-                                  isExpanded: true,
-                                  style: const TextStyle(fontSize: 12, color: AppColors.textPrimary, fontWeight: FontWeight.w500),
-                                  items: _units.map((u) => DropdownMenuItem(value: u, child: Text(u))).toList(),
-                                  onChanged: (val) {
-                                    if (val != null) setState(() => _baseUnit = val);
-                                  },
-                                ),
-                              ),
-                            ),
-                          ],
+                        child: ErpFormField(
+                          label: 'SKU / Code',
+                          controller: _codeController,
+                          hint: 'FG-080024',
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 12),
-                  _buildField('Packaging & Unit Conversion Formula', _conversionController, '1 cotton = 24 packets = 19.2 kg'),
-                  const SizedBox(height: 12),
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
-                        child: _buildField('Starting Available Stock', _stockController, '0'),
+                        child: ErpDropdownField<String>(
+                          label: 'Product Category',
+                          value: _type,
+                          items: _types,
+                          onChanged: (val) {
+                            if (val != null) setState(() => _type = val);
+                          },
+                        ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text('Stock Health Status', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
-                            const SizedBox(height: 5),
-                            Container(
-                              height: 38,
-                              padding: const EdgeInsets.symmetric(horizontal: 10),
-                              decoration: BoxDecoration(
-                                border: Border.all(color: AppColors.border),
-                                borderRadius: BorderRadius.circular(AppColors.radiusSm),
-                              ),
-                              child: DropdownButtonHideUnderline(
-                                child: DropdownButton<String>(
-                                  value: _status,
-                                  isExpanded: true,
-                                  style: const TextStyle(fontSize: 12, color: AppColors.textPrimary, fontWeight: FontWeight.w500),
-                                  items: _statuses.map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
-                                  onChanged: (val) {
-                                    if (val != null) setState(() => _status = val);
-                                  },
-                                ),
-                              ),
-                            ),
-                          ],
+                        child: ErpDropdownField<String>(
+                          label: 'Base Stock Unit',
+                          value: _baseUnit,
+                          items: _units,
+                          onChanged: (val) {
+                            if (val != null) setState(() => _baseUnit = val);
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  ErpFormField(
+                    label: 'Packaging & Unit Conversion Formula',
+                    controller: _conversionController,
+                    hint: '1 cotton = 24 packets = 19.2 kg',
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: ErpFormField(
+                          label: 'Starting Available Stock',
+                          controller: _stockController,
+                          hint: '0',
+                          keyboardType: TextInputType.number,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ErpDropdownField<String>(
+                          label: 'Stock Health Status',
+                          value: _status,
+                          items: _statuses,
+                          onChanged: (val) {
+                            if (val != null) setState(() => _status = val);
+                          },
                         ),
                       ),
                     ],
@@ -871,35 +771,6 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildField(String label, TextEditingController controller, String hint) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
-        const SizedBox(height: 5),
-        Container(
-          height: 38,
-          padding: const EdgeInsets.symmetric(horizontal: 10),
-          decoration: BoxDecoration(
-            border: Border.all(color: AppColors.border),
-            borderRadius: BorderRadius.circular(AppColors.radiusSm),
-          ),
-          child: TextField(
-            controller: controller,
-            style: const TextStyle(fontSize: 12, color: AppColors.textPrimary),
-            decoration: InputDecoration(
-              border: InputBorder.none,
-              hintText: hint,
-              hintStyle: const TextStyle(fontSize: 11.5, color: AppColors.textSubtle),
-              isDense: true,
-              contentPadding: const EdgeInsets.symmetric(vertical: 9),
-            ),
-          ),
-        ),
-      ],
     );
   }
 }
@@ -1016,26 +887,13 @@ class _StockAdjustmentDialogState extends State<StockAdjustmentDialog> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Text('Select Material / Product', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
-                  const SizedBox(height: 5),
-                  Container(
-                    height: 38,
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: AppColors.border),
-                      borderRadius: BorderRadius.circular(AppColors.radiusSm),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: _selectedProduct,
-                        isExpanded: true,
-                        style: const TextStyle(fontSize: 12, color: AppColors.textPrimary, fontWeight: FontWeight.w500),
-                        items: _productList.map((p) => DropdownMenuItem(value: p, child: Text(p))).toList(),
-                        onChanged: (val) {
-                          if (val != null) setState(() => _selectedProduct = val);
-                        },
-                      ),
-                    ),
+                  ErpDropdownField<String>(
+                    label: 'Select Material / Product',
+                    value: _selectedProduct,
+                    items: _productList,
+                    onChanged: (val) {
+                      if (val != null) setState(() => _selectedProduct = val);
+                    },
                   ),
                   const SizedBox(height: 12),
                   const Text('Adjustment Type', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
@@ -1055,77 +913,33 @@ class _StockAdjustmentDialogState extends State<StockAdjustmentDialog> {
                   ),
                   const SizedBox(height: 12),
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text('Quantity Adjusted', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
-                            const SizedBox(height: 5),
-                            Container(
-                              height: 38,
-                              padding: const EdgeInsets.symmetric(horizontal: 10),
-                              decoration: BoxDecoration(
-                                border: Border.all(color: AppColors.border),
-                                borderRadius: BorderRadius.circular(AppColors.radiusSm),
-                              ),
-                              child: TextField(
-                                controller: _qtyController,
-                                keyboardType: TextInputType.number,
-                                style: const TextStyle(fontSize: 12, color: AppColors.textPrimary, fontWeight: FontWeight.w700),
-                                decoration: const InputDecoration(border: InputBorder.none, isDense: true, contentPadding: EdgeInsets.symmetric(vertical: 9)),
-                              ),
-                            ),
-                          ],
+                        child: ErpFormField(
+                          label: 'Quantity Adjusted',
+                          controller: _qtyController,
+                          keyboardType: TextInputType.number,
+                          hint: '0',
                         ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text('Unit Valuation (Rs)', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
-                            const SizedBox(height: 5),
-                            Container(
-                              height: 38,
-                              padding: const EdgeInsets.symmetric(horizontal: 10),
-                              decoration: BoxDecoration(
-                                border: Border.all(color: AppColors.border),
-                                borderRadius: BorderRadius.circular(AppColors.radiusSm),
-                              ),
-                              child: TextField(
-                                controller: _costController,
-                                keyboardType: TextInputType.number,
-                                style: const TextStyle(fontSize: 12, color: AppColors.textPrimary),
-                                decoration: const InputDecoration(border: InputBorder.none, isDense: true, contentPadding: EdgeInsets.symmetric(vertical: 9)),
-                              ),
-                            ),
-                          ],
+                        child: ErpFormField(
+                          label: 'Unit Valuation (Rs)',
+                          controller: _costController,
+                          keyboardType: TextInputType.number,
+                          hint: '0',
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 12),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Audit Reason / Notes', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
-                      const SizedBox(height: 5),
-                      Container(
-                        height: 56,
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: AppColors.border),
-                          borderRadius: BorderRadius.circular(AppColors.radiusSm),
-                        ),
-                        child: TextField(
-                          controller: _reasonController,
-                          maxLines: 2,
-                          style: const TextStyle(fontSize: 11.5, color: AppColors.textPrimary),
-                          decoration: const InputDecoration(border: InputBorder.none, isDense: true),
-                        ),
-                      ),
-                    ],
+                  ErpFormField(
+                    label: 'Audit Reason / Notes',
+                    controller: _reasonController,
+                    maxLines: 2,
+                    hint: 'Reason for physical inventory adjustment...',
                   ),
                 ],
               ),
@@ -1285,90 +1099,84 @@ class _ProductionBatchDialogState extends State<ProductionBatchDialog> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
-                        child: _buildField('Batch Identifier', _batchNoController, 'PRD-XXXXX'),
+                        child: ErpFormField(
+                          label: 'Batch Identifier',
+                          controller: _batchNoController,
+                          hint: 'PRD-XXXXX',
+                        ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text('Operating Shift', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
-                            const SizedBox(height: 5),
-                            Container(
-                              height: 38,
-                              padding: const EdgeInsets.symmetric(horizontal: 10),
-                              decoration: BoxDecoration(
-                                border: Border.all(color: AppColors.border),
-                                borderRadius: BorderRadius.circular(AppColors.radiusSm),
-                              ),
-                              child: DropdownButtonHideUnderline(
-                                child: DropdownButton<String>(
-                                  value: _shift,
-                                  isExpanded: true,
-                                  style: const TextStyle(fontSize: 12, color: AppColors.textPrimary, fontWeight: FontWeight.w500),
-                                  items: const [
-                                    DropdownMenuItem(value: 'Morning Shift', child: Text('Morning Shift')),
-                                    DropdownMenuItem(value: 'Evening Shift', child: Text('Evening Shift')),
-                                    DropdownMenuItem(value: 'Night Shift', child: Text('Night Shift')),
-                                  ],
-                                  onChanged: (val) {
-                                    if (val != null) setState(() => _shift = val);
-                                  },
-                                ),
-                              ),
-                            ),
+                        child: ErpDropdownField<String>(
+                          label: 'Operating Shift',
+                          value: _shift,
+                          items: const [
+                            'Morning Shift',
+                            'Evening Shift',
+                            'Night Shift',
                           ],
+                          onChanged: (val) {
+                            if (val != null) setState(() => _shift = val);
+                          },
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 12),
-                  const Text('Finished Goods Manufactured', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
-                  const SizedBox(height: 5),
-                  Container(
-                    height: 38,
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: AppColors.border),
-                      borderRadius: BorderRadius.circular(AppColors.radiusSm),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: _finishedProduct,
-                        isExpanded: true,
-                        style: const TextStyle(fontSize: 12, color: AppColors.textPrimary, fontWeight: FontWeight.w500),
-                        items: _productList
-                            .map((p) => DropdownMenuItem(value: p, child: Text(p)))
-                            .toList(),
-                        onChanged: (val) {
-                          if (val != null) setState(() => _finishedProduct = val);
-                        },
-                      ),
-                    ),
+                  ErpDropdownField<String>(
+                    label: 'Finished Goods Manufactured',
+                    value: _finishedProduct,
+                    items: _productList,
+                    onChanged: (val) {
+                      if (val != null) setState(() => _finishedProduct = val);
+                    },
                   ),
                   const SizedBox(height: 12),
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
-                        child: _buildField('Units Produced (Packets)', _producedQtyController, '600'),
+                        child: ErpFormField(
+                          label: 'Units Produced (Packets)',
+                          controller: _producedQtyController,
+                          keyboardType: TextInputType.number,
+                          hint: '600',
+                        ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
-                        child: _buildField('Raw Salt Consumed (kg)', _rawSaltKgController, '620'),
+                        child: ErpFormField(
+                          label: 'Raw Salt Consumed (kg)',
+                          controller: _rawSaltKgController,
+                          keyboardType: TextInputType.number,
+                          hint: '620',
+                        ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 12),
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
-                        child: _buildField('Packaging Packets Used', _packetsUsedController, '600'),
+                        child: ErpFormField(
+                          label: 'Packaging Packets Used',
+                          controller: _packetsUsedController,
+                          keyboardType: TextInputType.number,
+                          hint: '600',
+                        ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
-                        child: _buildField('Labour & Overhead (Rs)', _labourCostController, '5400'),
+                        child: ErpFormField(
+                          label: 'Labour & Overhead (Rs)',
+                          controller: _labourCostController,
+                          keyboardType: TextInputType.number,
+                          hint: '5400',
+                        ),
                       ),
                     ],
                   ),
@@ -1402,35 +1210,6 @@ class _ProductionBatchDialogState extends State<ProductionBatchDialog> {
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildField(String label, TextEditingController controller, String hint) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
-        const SizedBox(height: 5),
-        Container(
-          height: 38,
-          padding: const EdgeInsets.symmetric(horizontal: 10),
-          decoration: BoxDecoration(
-            border: Border.all(color: AppColors.border),
-            borderRadius: BorderRadius.circular(AppColors.radiusSm),
-          ),
-          child: TextField(
-            controller: controller,
-            style: const TextStyle(fontSize: 12, color: AppColors.textPrimary),
-            decoration: InputDecoration(
-              border: InputBorder.none,
-              hintText: hint,
-              hintStyle: const TextStyle(fontSize: 11.5, color: AppColors.textSubtle),
-              isDense: true,
-              contentPadding: const EdgeInsets.symmetric(vertical: 9),
-            ),
-          ),
-        ),
-      ],
     );
   }
 }
@@ -1590,27 +1369,53 @@ class _TransactionEntryDialogState extends State<TransactionEntryDialog> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
-                        child: _buildField('Invoice / Reference #', _refController, 'SAL-XXXXX'),
+                        child: ErpFormField(
+                          label: 'Invoice / Reference #',
+                          controller: _refController,
+                          hint: 'SAL-XXXXX',
+                        ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
-                        child: _buildField(partyLabel, _partyController, 'Party name'),
+                        child: ErpFormField(
+                          label: partyLabel,
+                          controller: _partyController,
+                          hint: 'Party name',
+                        ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 12),
-                  _buildField('Product Item Description', _itemController, 'Product description'),
+                  ErpFormField(
+                    label: 'Product Item Description',
+                    controller: _itemController,
+                    hint: 'Product description',
+                  ),
                   const SizedBox(height: 12),
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
-                        child: _buildField('Quantity', _qtyController, '1', onChanged: (_) => setState(() {})),
+                        child: ErpFormField(
+                          label: 'Quantity',
+                          controller: _qtyController,
+                          hint: '1',
+                          keyboardType: TextInputType.number,
+                          onChanged: (_) => setState(() {}),
+                        ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
-                        child: _buildField('Unit Price (Rs)', _rateController, '0', onChanged: (_) => setState(() {})),
+                        child: ErpFormField(
+                          label: 'Unit Price (Rs)',
+                          controller: _rateController,
+                          hint: '0',
+                          keyboardType: TextInputType.number,
+                          onChanged: (_) => setState(() {}),
+                        ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
@@ -1640,37 +1445,26 @@ class _TransactionEntryDialogState extends State<TransactionEntryDialog> {
                   ),
                   const SizedBox(height: 12),
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
-                        child: _buildField(isSales ? 'Amount Received (Rs)' : 'Amount Paid (Rs)', _paidController, '0', onChanged: (_) => setState(() {})),
+                        child: ErpFormField(
+                          label: isSales ? 'Amount Received (Rs)' : 'Amount Paid (Rs)',
+                          controller: _paidController,
+                          hint: '0',
+                          keyboardType: TextInputType.number,
+                          onChanged: (_) => setState(() {}),
+                        ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text('Payment Wallet', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
-                            const SizedBox(height: 5),
-                            Container(
-                              height: 38,
-                              padding: const EdgeInsets.symmetric(horizontal: 10),
-                              decoration: BoxDecoration(
-                                border: Border.all(color: AppColors.border),
-                                borderRadius: BorderRadius.circular(AppColors.radiusSm),
-                              ),
-                              child: DropdownButtonHideUnderline(
-                                child: DropdownButton<String>(
-                                  value: _wallet,
-                                  isExpanded: true,
-                                  style: const TextStyle(fontSize: 12, color: AppColors.textPrimary, fontWeight: FontWeight.w500),
-                                  items: _wallets.map((w) => DropdownMenuItem(value: w, child: Text(w))).toList(),
-                                  onChanged: (val) {
-                                    if (val != null) setState(() => _wallet = val);
-                                  },
-                                ),
-                              ),
-                            ),
-                          ],
+                        child: ErpDropdownField<String>(
+                          label: 'Payment Wallet',
+                          value: _wallets.contains(_wallet) ? _wallet : _wallets.first,
+                          items: _wallets,
+                          onChanged: (val) {
+                            if (val != null) setState(() => _wallet = val);
+                          },
                         ),
                       ),
                     ],
@@ -1727,36 +1521,6 @@ class _TransactionEntryDialogState extends State<TransactionEntryDialog> {
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildField(String label, TextEditingController controller, String hint, {ValueChanged<String>? onChanged}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
-        const SizedBox(height: 5),
-        Container(
-          height: 38,
-          padding: const EdgeInsets.symmetric(horizontal: 10),
-          decoration: BoxDecoration(
-            border: Border.all(color: AppColors.border),
-            borderRadius: BorderRadius.circular(AppColors.radiusSm),
-          ),
-          child: TextField(
-            controller: controller,
-            onChanged: onChanged,
-            style: const TextStyle(fontSize: 12, color: AppColors.textPrimary),
-            decoration: InputDecoration(
-              border: InputBorder.none,
-              hintText: hint,
-              hintStyle: const TextStyle(fontSize: 11.5, color: AppColors.textSubtle),
-              isDense: true,
-              contentPadding: const EdgeInsets.symmetric(vertical: 9),
-            ),
-          ),
-        ),
-      ],
     );
   }
 }
@@ -1853,111 +1617,46 @@ class _WalletTransferDialogState extends State<WalletTransferDialog> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text('Source Wallet (From)', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
-                            const SizedBox(height: 5),
-                            Container(
-                              height: 38,
-                              padding: const EdgeInsets.symmetric(horizontal: 10),
-                              decoration: BoxDecoration(
-                                border: Border.all(color: AppColors.border),
-                                borderRadius: BorderRadius.circular(AppColors.radiusSm),
-                              ),
-                              child: DropdownButtonHideUnderline(
-                                child: DropdownButton<String>(
-                                  value: _fromWallet,
-                                  isExpanded: true,
-                                  style: const TextStyle(fontSize: 11.5, color: AppColors.textPrimary, fontWeight: FontWeight.w500),
-                                  items: widget.walletNames.map((w) => DropdownMenuItem(value: w, child: Text(w))).toList(),
-                                  onChanged: (val) {
-                                    if (val != null) setState(() => _fromWallet = val);
-                                  },
-                                ),
-                              ),
-                            ),
-                          ],
+                        child: ErpDropdownField<String>(
+                          label: 'Source Wallet (From)',
+                          value: widget.walletNames.contains(_fromWallet) ? _fromWallet : widget.walletNames.first,
+                          items: widget.walletNames,
+                          onChanged: (val) {
+                            if (val != null) setState(() => _fromWallet = val);
+                          },
                         ),
                       ),
                       const Padding(
-                        padding: EdgeInsets.fromLTRB(8, 20, 8, 0),
+                        padding: EdgeInsets.fromLTRB(8, 26, 8, 0),
                         child: Icon(Icons.arrow_forward, size: 16, color: AppColors.brandPrimary),
                       ),
                       Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text('Destination Wallet (To)', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
-                            const SizedBox(height: 5),
-                            Container(
-                              height: 38,
-                              padding: const EdgeInsets.symmetric(horizontal: 10),
-                              decoration: BoxDecoration(
-                                border: Border.all(color: AppColors.border),
-                                borderRadius: BorderRadius.circular(AppColors.radiusSm),
-                              ),
-                              child: DropdownButtonHideUnderline(
-                                child: DropdownButton<String>(
-                                  value: _toWallet,
-                                  isExpanded: true,
-                                  style: const TextStyle(fontSize: 11.5, color: AppColors.textPrimary, fontWeight: FontWeight.w500),
-                                  items: widget.walletNames.map((w) => DropdownMenuItem(value: w, child: Text(w))).toList(),
-                                  onChanged: (val) {
-                                    if (val != null) setState(() => _toWallet = val);
-                                  },
-                                ),
-                              ),
-                            ),
-                          ],
+                        child: ErpDropdownField<String>(
+                          label: 'Destination Wallet (To)',
+                          value: widget.walletNames.contains(_toWallet) ? _toWallet : widget.walletNames.first,
+                          items: widget.walletNames,
+                          onChanged: (val) {
+                            if (val != null) setState(() => _toWallet = val);
+                          },
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 12),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Transfer Amount (Rs)', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
-                      const SizedBox(height: 5),
-                      Container(
-                        height: 38,
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: AppColors.border),
-                          borderRadius: BorderRadius.circular(AppColors.radiusSm),
-                        ),
-                        child: TextField(
-                          controller: _amountController,
-                          keyboardType: TextInputType.number,
-                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
-                          decoration: const InputDecoration(border: InputBorder.none, isDense: true, contentPadding: EdgeInsets.symmetric(vertical: 9)),
-                        ),
-                      ),
-                    ],
+                  ErpFormField(
+                    label: 'Transfer Amount (Rs)',
+                    controller: _amountController,
+                    keyboardType: TextInputType.number,
+                    hint: '0',
                   ),
                   const SizedBox(height: 12),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Transfer Memo / Reference', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
-                      const SizedBox(height: 5),
-                      Container(
-                        height: 38,
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: AppColors.border),
-                          borderRadius: BorderRadius.circular(AppColors.radiusSm),
-                        ),
-                        child: TextField(
-                          controller: _notesController,
-                          style: const TextStyle(fontSize: 11.5, color: AppColors.textPrimary),
-                          decoration: const InputDecoration(border: InputBorder.none, isDense: true, contentPadding: EdgeInsets.symmetric(vertical: 9)),
-                        ),
-                      ),
-                    ],
+                  ErpFormField(
+                    label: 'Transfer Memo / Reference',
+                    controller: _notesController,
+                    hint: 'Transfer reason or reference code...',
                   ),
                 ],
               ),
@@ -2142,78 +1841,61 @@ class _DailyVoucherDialogState extends State<DailyVoucherDialog> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
-                        child: _buildField('Voucher #', _refController, 'EXP-XXXXX'),
+                        child: ErpFormField(
+                          label: 'Voucher #',
+                          controller: _refController,
+                          hint: 'EXP-XXXXX',
+                        ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text('Voucher Type', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
-                            const SizedBox(height: 5),
-                            Container(
-                              height: 38,
-                              padding: const EdgeInsets.symmetric(horizontal: 10),
-                              decoration: BoxDecoration(
-                                border: Border.all(color: AppColors.border),
-                                borderRadius: BorderRadius.circular(AppColors.radiusSm),
-                              ),
-                              child: DropdownButtonHideUnderline(
-                                child: DropdownButton<String>(
-                                  value: _types.contains(_type) ? _type : _types.first,
-                                  isExpanded: true,
-                                  style: const TextStyle(fontSize: 12, color: AppColors.textPrimary, fontWeight: FontWeight.w500),
-                                  items: _types.map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
-                                  onChanged: (val) {
-                                    if (val != null) setState(() => _type = val);
-                                  },
-                                ),
-                              ),
-                            ),
-                          ],
+                        child: ErpDropdownField<String>(
+                          label: 'Voucher Type',
+                          value: _types.contains(_type) ? _type : _types.first,
+                          items: _types,
+                          onChanged: (val) {
+                            if (val != null) setState(() => _type = val);
+                          },
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 12),
-                  _buildField('Description / Category', _descController, 'e.g. Labour wages, Meals, Factory repairs'),
+                  ErpFormField(
+                    label: 'Description / Category',
+                    controller: _descController,
+                    hint: 'e.g. Labour wages, Meals, Factory repairs',
+                  ),
                   const SizedBox(height: 12),
-                  _buildField('Party / Recipient / Vendor', _partyController, 'e.g. Labour Team A, Al-Rehman Hotel'),
+                  ErpFormField(
+                    label: 'Party / Recipient / Vendor',
+                    controller: _partyController,
+                    hint: 'e.g. Labour Team A, Al-Rehman Hotel',
+                  ),
                   const SizedBox(height: 12),
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
-                        child: _buildField('Amount (Rs)', _amountController, '0'),
+                        child: ErpFormField(
+                          label: 'Amount (Rs)',
+                          controller: _amountController,
+                          keyboardType: TextInputType.number,
+                          hint: '0',
+                        ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text('Affected Wallet', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
-                            const SizedBox(height: 5),
-                            Container(
-                              height: 38,
-                              padding: const EdgeInsets.symmetric(horizontal: 10),
-                              decoration: BoxDecoration(
-                                border: Border.all(color: AppColors.border),
-                                borderRadius: BorderRadius.circular(AppColors.radiusSm),
-                              ),
-                              child: DropdownButtonHideUnderline(
-                                child: DropdownButton<String>(
-                                  value: _wallets.contains(_wallet) ? _wallet : _wallets.first,
-                                  isExpanded: true,
-                                  style: const TextStyle(fontSize: 12, color: AppColors.textPrimary, fontWeight: FontWeight.w500),
-                                  items: _wallets.map((w) => DropdownMenuItem(value: w, child: Text(w))).toList(),
-                                  onChanged: (val) {
-                                    if (val != null) setState(() => _wallet = val);
-                                  },
-                                ),
-                              ),
-                            ),
-                          ],
+                        child: ErpDropdownField<String>(
+                          label: 'Affected Wallet',
+                          value: _wallets.contains(_wallet) ? _wallet : _wallets.first,
+                          items: _wallets,
+                          onChanged: (val) {
+                            if (val != null) setState(() => _wallet = val);
+                          },
                         ),
                       ),
                     ],
@@ -2248,35 +1930,6 @@ class _DailyVoucherDialogState extends State<DailyVoucherDialog> {
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildField(String label, TextEditingController controller, String hint) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
-        const SizedBox(height: 5),
-        Container(
-          height: 38,
-          padding: const EdgeInsets.symmetric(horizontal: 10),
-          decoration: BoxDecoration(
-            border: Border.all(color: AppColors.border),
-            borderRadius: BorderRadius.circular(AppColors.radiusSm),
-          ),
-          child: TextField(
-            controller: controller,
-            style: const TextStyle(fontSize: 12, color: AppColors.textPrimary),
-            decoration: InputDecoration(
-              border: InputBorder.none,
-              hintText: hint,
-              hintStyle: const TextStyle(fontSize: 11.5, color: AppColors.textSubtle),
-              isDense: true,
-              contentPadding: const EdgeInsets.symmetric(vertical: 9),
-            ),
-          ),
-        ),
-      ],
     );
   }
 }
