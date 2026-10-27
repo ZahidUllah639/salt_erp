@@ -300,6 +300,7 @@ class _PartiesPageState extends State<PartiesPage> {
                         flex: 3,
                         child: ErpSearchInput(
                           placeholder: 'Search ${widget.type.toLowerCase()} by name, phone, code or address...',
+                          shortcutLabel: 'Ctrl K',
                           onChanged: (q) {
                             _searchQuery = q;
                             _loadData();

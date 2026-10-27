@@ -426,61 +426,13 @@ class _AppShellState extends State<AppShell> {
                           // Top Actions (Search, Notifications, Profile)
                           Row(
                             children: [
-                              // Global Search
-                              Container(
-                                width: 240,
-                                height: 35,
-                                padding: const EdgeInsets.symmetric(horizontal: 10),
-                                decoration: BoxDecoration(
-                                  color: AppColors.surfaceMuted,
-                                  border: Border.all(color: AppColors.border),
-                                  borderRadius: BorderRadius.circular(AppColors.radiusSm),
-                                ),
-                                child: Row(
-                                  children: [
-                                    AppIcons.icon('search', size: 15, color: AppColors.textSubtle),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: TextField(
-                                        onSubmitted: _handleGlobalSearch,
-                                        decoration: const InputDecoration(
-                                          hintText: 'Search ERP (press Enter)...',
-                                          hintStyle: TextStyle(
-                                            color: AppColors.textSubtle,
-                                            fontSize: 11.5,
-                                          ),
-                                          border: InputBorder.none,
-                                          enabledBorder: InputBorder.none,
-                                          focusedBorder: InputBorder.none,
-                                          isDense: true,
-                                          contentPadding: EdgeInsets.zero,
-                                        ),
-                                        style: const TextStyle(
-                                          color: AppColors.textPrimary,
-                                          fontSize: 11.5,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                    ),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white,
-                                        border: Border.all(color: AppColors.borderStrong),
-                                        borderRadius: BorderRadius.circular(4),
-                                        boxShadow: AppColors.shadowSm,
-                                      ),
-                                      child: const Text(
-                                        'Ctrl K',
-                                        style: TextStyle(
-                                          fontSize: 9,
-                                          color: AppColors.textMuted,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                              // Global Search with animated hover, focus expansion and zero inner white box
+                              ErpSearchInput(
+                                placeholder: 'Search ERP (press Enter)...',
+                                onSubmitted: _handleGlobalSearch,
+                                shortcutLabel: 'Ctrl K',
+                                width: 270,
+                                focusedWidth: 320,
                               ),
                               const SizedBox(width: 10),
 

@@ -637,35 +637,11 @@ class AppToolbar extends StatefulWidget {
 }
 
 class _AppToolbarState extends State<AppToolbar> {
-  final TextEditingController _controller = TextEditingController();
-  final FocusNode _focusNode = FocusNode();
-  bool _hasText = false;
-  bool _isSearchHovered = false;
-  bool _isSearchFocused = false;
   bool _isFilterHovered = false;
   bool _isDateHovered = false;
 
   @override
-  void initState() {
-    super.initState();
-    _focusNode.addListener(() {
-      if (mounted) setState(() => _isSearchFocused = _focusNode.hasFocus);
-    });
-  }
-
-  @override
-  void dispose() {
-    _focusNode.dispose();
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final searchBorderColor = _isSearchFocused
-        ? AppColors.brandPrimary
-        : (_isSearchHovered ? const Color(0xFF64748B) : AppColors.border);
-
     return Container(
       height: 54,
       padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -676,122 +652,12 @@ class _AppToolbarState extends State<AppToolbar> {
       ),
       child: Row(
         children: [
-          // Search Box with clear button, hover and focus ring
-          MouseRegion(
-            cursor: SystemMouseCursors.text,
-            onEnter: (_) => setState(() => _isSearchHovered = true),
-            onExit: (_) => setState(() => _isSearchHovered = false),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 160),
-              curve: Curves.easeOut,
-              width: 290,
-              height: 34,
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                border: Border.all(
-                  color: searchBorderColor,
-                  width: _isSearchFocused ? 1.5 : 1.0,
-                ),
-                borderRadius: BorderRadius.circular(AppColors.radiusSm),
-                boxShadow: _isSearchFocused
-                    ? const [
-                        BoxShadow(
-                          color: Color(0x282563EB),
-                          blurRadius: 6,
-                          spreadRadius: 1.5,
-                        ),
-                      ]
-                    : (_isSearchHovered
-                        ? const [
-                            BoxShadow(
-                              color: Color(0x0F0F172A),
-                              blurRadius: 5,
-                              offset: Offset(0, 1.5),
-                            ),
-                          ]
-                        : null),
-              ),
-              child: Row(
-                children: [
-                  AppIcons.icon(
-                    'search',
-                    size: 15,
-                    color: _isSearchFocused
-                        ? AppColors.brandPrimary
-                        : (_isSearchHovered ? const Color(0xFF475569) : AppColors.textSubtle),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: TextField(
-                      controller: _controller,
-                      focusNode: _focusNode,
-                      onChanged: (val) {
-                        setState(() => _hasText = val.isNotEmpty);
-                        widget.onSearch?.call(val);
-                      },
-                      decoration: InputDecoration(
-                        hintText: widget.placeholder,
-                        hintStyle: const TextStyle(
-                          color: AppColors.textSubtle,
-                          fontSize: 11.5,
-                        ),
-                        border: InputBorder.none,
-                        enabledBorder: InputBorder.none,
-                        focusedBorder: InputBorder.none,
-                        disabledBorder: InputBorder.none,
-                        errorBorder: InputBorder.none,
-                        filled: false,
-                        isDense: true,
-                        contentPadding: EdgeInsets.zero,
-                      ),
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                  if (_hasText)
-                    MouseRegion(
-                      cursor: SystemMouseCursors.click,
-                      child: GestureDetector(
-                        onTap: () {
-                          _controller.clear();
-                          setState(() => _hasText = false);
-                          widget.onSearch?.call('');
-                        },
-                        child: const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 4),
-                          child: Icon(
-                            Icons.close,
-                            size: 14,
-                            color: AppColors.textMuted,
-                          ),
-                        ),
-                      ),
-                    )
-                  else
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        border: Border.all(color: AppColors.borderStrong),
-                        borderRadius: BorderRadius.circular(4),
-                        boxShadow: AppColors.shadowSm,
-                      ),
-                      child: const Text(
-                        'Ctrl K',
-                        style: TextStyle(
-                          fontSize: 9,
-                          color: AppColors.textMuted,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
+          // Unified World-Class Search Box
+          ErpSearchInput(
+            placeholder: widget.placeholder,
+            onChanged: widget.onSearch,
+            shortcutLabel: 'Ctrl K',
+            width: 300,
           ),
           const SizedBox(width: 8),
 
@@ -1893,25 +1759,34 @@ class DangerNotice extends StatelessWidget {
   }
 }
 
-/// World-class ERP Search Input with smooth hover border illumination and focus ring halo.
+/// World-class ERP Search Input with smooth 180ms easeOutCubic animation,
+/// subtle slate hover border illumination (#64748B), brand-blue focus ring halo (#2563EB),
+/// zero inner white box or double outline, search icon illumination, interactive clear (x),
+/// and optional shortcut keycap pill (e.g. 'Ctrl K').
 class ErpSearchInput extends StatefulWidget {
   final TextEditingController? controller;
   final ValueChanged<String>? onChanged;
+  final ValueChanged<String>? onSubmitted;
   final VoidCallback? onClear;
   final String placeholder;
   final double height;
   final double? width;
+  final double? focusedWidth;
   final FocusNode? focusNode;
+  final String? shortcutLabel;
 
   const ErpSearchInput({
     super.key,
     this.controller,
     this.onChanged,
+    this.onSubmitted,
     this.onClear,
     this.placeholder = 'Search...',
-    this.height = 36,
+    this.height = 35.0,
     this.width,
+    this.focusedWidth,
     this.focusNode,
+    this.shortcutLabel,
   });
 
   @override
@@ -1923,6 +1798,7 @@ class _ErpSearchInputState extends State<ErpSearchInput> {
   late TextEditingController _controller;
   bool _isHovered = false;
   bool _isFocused = false;
+  bool _hasText = false;
   bool _internalController = false;
   bool _internalFocus = false;
 
@@ -1935,6 +1811,9 @@ class _ErpSearchInputState extends State<ErpSearchInput> {
     } else {
       _controller = widget.controller!;
     }
+    _hasText = _controller.text.isNotEmpty;
+    _controller.addListener(_onTextChanged);
+
     if (widget.focusNode == null) {
       _focusNode = FocusNode();
       _internalFocus = true;
@@ -1944,6 +1823,13 @@ class _ErpSearchInputState extends State<ErpSearchInput> {
     _focusNode.addListener(_onFocusChange);
   }
 
+  void _onTextChanged() {
+    final hasText = _controller.text.isNotEmpty;
+    if (_hasText != hasText && mounted) {
+      setState(() => _hasText = hasText);
+    }
+  }
+
   void _onFocusChange() {
     if (mounted) setState(() => _isFocused = _focusNode.hasFocus);
   }
@@ -1951,6 +1837,7 @@ class _ErpSearchInputState extends State<ErpSearchInput> {
   @override
   void dispose() {
     _focusNode.removeListener(_onFocusChange);
+    _controller.removeListener(_onTextChanged);
     if (_internalFocus) _focusNode.dispose();
     if (_internalController) _controller.dispose();
     super.dispose();
@@ -1958,19 +1845,26 @@ class _ErpSearchInputState extends State<ErpSearchInput> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isWide = _isFocused && widget.focusedWidth != null;
+    final double? effectiveWidth = isWide ? widget.focusedWidth : widget.width;
+
     final borderColor = _isFocused
         ? AppColors.brandPrimary
         : (_isHovered ? const Color(0xFF64748B) : AppColors.border);
+
+    final iconColor = _isFocused
+        ? AppColors.brandPrimary
+        : (_isHovered ? const Color(0xFF334155) : AppColors.textSubtle);
 
     return MouseRegion(
       cursor: SystemMouseCursors.text,
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 160),
-        curve: Curves.easeOut,
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOutCubic,
         height: widget.height,
-        width: widget.width,
+        width: effectiveWidth,
         padding: const EdgeInsets.symmetric(horizontal: 10),
         decoration: BoxDecoration(
           color: Colors.white,
@@ -1983,7 +1877,7 @@ class _ErpSearchInputState extends State<ErpSearchInput> {
               ? const [
                   BoxShadow(
                     color: Color(0x282563EB),
-                    blurRadius: 6,
+                    blurRadius: 8,
                     spreadRadius: 1.5,
                   ),
                 ]
@@ -1991,7 +1885,7 @@ class _ErpSearchInputState extends State<ErpSearchInput> {
                   ? const [
                       BoxShadow(
                         color: Color(0x0F0F172A),
-                        blurRadius: 5,
+                        blurRadius: 6,
                         offset: Offset(0, 1.5),
                       ),
                     ]
@@ -2001,31 +1895,35 @@ class _ErpSearchInputState extends State<ErpSearchInput> {
           children: [
             AppIcons.icon(
               'search',
-              size: 14,
-              color: _isFocused
-                  ? AppColors.brandPrimary
-                  : (_isHovered ? const Color(0xFF475569) : AppColors.textMuted),
+              size: 15,
+              color: iconColor,
             ),
             const SizedBox(width: 8),
             Expanded(
               child: TextField(
                 controller: _controller,
                 focusNode: _focusNode,
-                onChanged: (val) {
-                  setState(() {});
-                  widget.onChanged?.call(val);
-                },
+                textAlignVertical: TextAlignVertical.center,
                 style: const TextStyle(
                   color: AppColors.textPrimary,
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
                 ),
+                cursorColor: AppColors.brandPrimary,
+                cursorWidth: 1.5,
+                onChanged: (val) {
+                  widget.onChanged?.call(val);
+                },
+                onSubmitted: widget.onSubmitted,
                 decoration: InputDecoration(
                   hintText: widget.placeholder,
                   hintStyle: const TextStyle(
                     color: AppColors.textSubtle,
                     fontSize: 11.5,
+                    fontWeight: FontWeight.w400,
                   ),
+                  filled: false,
+                  fillColor: Colors.transparent,
                   border: InputBorder.none,
                   enabledBorder: InputBorder.none,
                   focusedBorder: InputBorder.none,
@@ -2033,23 +1931,54 @@ class _ErpSearchInputState extends State<ErpSearchInput> {
                   errorBorder: InputBorder.none,
                   isDense: true,
                   contentPadding: EdgeInsets.zero,
-                  filled: false,
                 ),
               ),
             ),
-            if (_controller.text.isNotEmpty)
-              MouseRegion(
-                cursor: SystemMouseCursors.click,
-                child: GestureDetector(
-                  onTap: () {
-                    _controller.clear();
-                    setState(() {});
-                    widget.onChanged?.call('');
-                    widget.onClear?.call();
-                  },
-                  child: const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 4),
-                    child: Icon(Icons.close, size: 14, color: AppColors.textMuted),
+            if (_hasText)
+              Tooltip(
+                message: 'Clear search',
+                child: MouseRegion(
+                  cursor: SystemMouseCursors.click,
+                  child: GestureDetector(
+                    onTap: () {
+                      _controller.clear();
+                      setState(() => _hasText = false);
+                      widget.onChanged?.call('');
+                      widget.onClear?.call();
+                    },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 140),
+                      padding: const EdgeInsets.all(2.5),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF1F5F9),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: const Icon(
+                        Icons.close,
+                        size: 13,
+                        color: Color(0xFF64748B),
+                      ),
+                    ),
+                  ),
+                ),
+              )
+            else if (widget.shortcutLabel != null)
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 160),
+                padding: const EdgeInsets.symmetric(horizontal: 5.5, vertical: 2),
+                decoration: BoxDecoration(
+                  color: _isFocused ? AppColors.brandLight : const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(
+                    color: _isFocused ? AppColors.brandPrimary.withAlpha(60) : const Color(0xFFE2E8F0),
+                  ),
+                ),
+                child: Text(
+                  widget.shortcutLabel!,
+                  style: TextStyle(
+                    fontSize: 9.5,
+                    fontWeight: FontWeight.w600,
+                    color: _isFocused ? AppColors.brandPrimary : const Color(0xFF64748B),
                   ),
                 ),
               ),
